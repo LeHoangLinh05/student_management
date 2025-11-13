@@ -1,0 +1,58 @@
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Sidebar from "./components/Sidebar.jsx";
+import Topbar from "./components/Topbar.jsx";
+import Profile from "./pages/Profile.jsx";
+import Records from "./pages/Records.jsx";
+import Certificates from "./pages/Certificates.jsx";
+// import Verify from "./pages/Verify.jsx";
+import Auth from "./pages/Auth.jsx";
+import { useAuth } from "./context/AuthContext.jsx";
+import { useNavigate } from "react-router-dom";
+import StudentDashboard from "./pages/StudentDashboard.jsx";
+import Verify from "./pages/Verify.jsx";  
+
+function AppLayout() {
+      const { user } = useAuth();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (!user) navigate("/auth?mode=signin", { replace: true });
+  }, [user, navigate]);
+
+  if (!user) return null;  
+  return (
+    <div className="app">
+      <Sidebar />
+      <main className="main">
+        <Topbar />
+        <div className="container">
+          <Routes>
+            <Route path="profile" element={<Profile />} />
+            <Route path="records" element={<Records />} />
+            <Route path="certificates" element={<Certificates />} />
+            <Route path="*" element={<Navigate to="profile" replace />} />
+          </Routes>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      {/* Auth cho admin */}
+      <Route path="/auth" element={<Auth />} />
+
+      {/* Student*/}
+      <Route path="/student" element={<StudentDashboard />} />
+
+      {/* Verify doanh nghiệp */}
+      <Route path="/verify" element={<Verify />} />
+
+      {/* Admin */}
+      <Route path="/*" element={<AppLayout />} />
+    </Routes>
+  );
+}

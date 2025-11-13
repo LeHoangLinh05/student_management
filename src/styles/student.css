@@ -1,0 +1,172 @@
+.student-root {
+  min-height: 100vh;
+  background: #f3f4f6;
+}
+
+.student-main {
+  width: 100%;
+  padding: 24px 32px 40px;
+  box-sizing: border-box;
+}
+
+/* Header */
+
+.student-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.student-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.student-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.student-user {
+  text-align: right;
+}
+
+.student-user-name {
+  font-weight: 600;
+}
+
+.student-user-email {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.student-logout-btn {
+  margin-top: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  color: #374151;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.student-logout-btn:hover {
+  background: #f3f4f6;
+  border-color: #cbd5e1;
+}
+
+/* Summary cards */
+
+.student-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.student-summary-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.student-icon-green {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.student-icon-purple {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+/* Profile */
+
+.student-profile {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.student-profile-name {
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.student-profile-email,
+.student-profile-dob {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.student-wallet-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Certs */
+
+.student-certs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.student-cert-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.student-cert-title {
+  font-weight: 600;
+}
+
+.student-cert-date {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.student-cert-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.student-cert-nft {
+  color: #4f46e5;
+}
+
+/* Responsive */
+
+@media (max-width: 960px) {
+  .student-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-certs-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-main {
+    padding: 16px;
+  }
+
+  .student-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .student-user {
+    text-align: left;
+  }
+}

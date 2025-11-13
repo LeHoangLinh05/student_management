@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Hash, QrCode, Check, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../lib/api.js";
-import "../styles/Verify.css"; 
+import "../styles/verify.css"; 
 
 export default function Verify() {
   const navigate = useNavigate();

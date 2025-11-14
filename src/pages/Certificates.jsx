@@ -9,21 +9,40 @@ export default function Certificates() {
 
   const studentId = "675a8b9f4d9b58e0c2d13f33";
 
-  useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const res = await api.get(`/api/certificates/${studentId}`);
-        setCerts(res.data || []);
-      } catch (err) {
-        console.error("Lỗi khi tải certificates:", err);
-        setError(err.response?.data?.message || "Không tải được dữ liệu");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [studentId]);
+  const mockCerts = [
+  {
+    type: "Bằng Kỹ sư CNTT",
+    date: "2024-06-15",
+    nftCode: "#NFT-001",
+    status: "Đã cấp"
+  },
+  {
+    type: "Chứng chỉ Blockchain",
+    date: "2024-10-20",
+    nftCode: "#NFT-002",
+    status: "Đã cấp"
+  },
+];
+
+useEffect(() => {
+  setCerts(mockCerts);
+}, []);
+
+  // useEffect(() => {
+  //   (async () => {
+  //     try {
+  //       setLoading(true);
+  //       setError("");
+  //       const res = await api.get(`/api/certificates/${studentId}`);
+  //       setCerts(res.data || []);
+  //     } catch (err) {
+  //       console.error("Lỗi khi tải certificates:", err);
+  //       setError(err.response?.data?.message || "Không tải được dữ liệu");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   })();
+  // }, [studentId]);
 
   return (
     <div>

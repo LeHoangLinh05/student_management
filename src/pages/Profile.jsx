@@ -1,15 +1,33 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Users, Check, Award, Upload } from "lucide-react";
 import api from "../lib/api.js";
 
 export default function Profile() {
     const [students, setStudents] = React.useState([]);
 
-    React.useEffect(() => {
-        api.get("/api/students")
-        .then(res => setStudents(res.data))
-        .catch(console.error);
+    // React.useEffect(() => {
+    //     api.get("/api/students")
+    //     .then(res => setStudents(res.data))
+    //     .catch(console.error);
+    // }, []);
+    
+    // Mock student profile
+    const mockStudent = {
+      fullName: "Nguyễn Văn A",
+      code: "SV2024001",
+      mail: "student@university.edu.vn",
+      dob: "2003-01-20",
+      wallet: "0x742d35Cc...f3c",
+      major: "Kỹ sư CNTT",
+      gender: "Nam",
+      phone: "0987 123 456",
+      address: "Hà Nội",
+    };
+
+    useEffect(() => {
+      setStudents(mockStudent);
     }, []);
+
 
   return (
     <div>

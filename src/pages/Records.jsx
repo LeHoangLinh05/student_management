@@ -11,6 +11,33 @@ export default function Records() {
   const [subject, setSubject]   = useState("");
   const [grade, setGrade]       = useState("");
   const [semester, setSemester] = useState("HK1 2024-2025");
+  
+  const mockRecords = [
+    {
+      subject: "Lập trình Web",
+      grade: 9.5,
+      semester: "HK1 2024-2025",
+      createdAt: "2025-11-10",
+    },
+    {
+      subject: "Cơ sở dữ liệu",
+      grade: 8.8,
+      semester: "HK1 2024-2025",
+      createdAt: "2025-11-08",
+    },
+    {
+      subject: "Mạng máy tính",
+      grade: 9.0,
+      semester: "HK1 2024-2025",
+      createdAt: "2025-11-05",
+    },
+  ];
+
+  useEffect(() => {
+    setRecords(mockRecords);
+  }, []);
+
+  
   const loadStudentAndRecords = async () => {
     try {
       setError("");

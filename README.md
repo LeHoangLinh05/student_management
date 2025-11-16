@@ -7,3 +7,7 @@ docker compose build
 ```
 docker compose up --build
 ```
+### Run: 
+```
+http://localhost:5173/
+```

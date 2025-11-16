@@ -18,50 +18,58 @@ export default function Auth() {
   };
   
 
-  return (
-    <div className="auth">
-      <div className="auth-left">
-        <div className="auth-brand">DeviasKit</div>
+return (
+  <div className="auth">
+    <div className="auth-left">
+      <div className="auth-brand">DeviasKit</div>
 
-        <div className="auth-form">
-          <div className="auth-head">
-            <h1>{mode === "signin" ? "Sign in" : "Sign up"}</h1>
-            <p className="muted">
-              {mode === "signin" ? (
-                <>
-                  Don&apos;t have an account?{" "}
-                  <button className="link-like" onClick={() => switchMode("signup")}>
-                    Sign up
-                  </button>
-                </>
-              ) : (
-                <>
-                  Already have an account?{" "}
-                  <button className="link-like" onClick={() => switchMode("signin")}>
-                    Sign in
-                  </button>
-                </>
-              )}
-            </p>
-          </div>
-
-          {mode === "signin"
-           ? <SignInForm />
-           : <SignUpForm onSuccess={() => switchMode("signin")} />}
-
-          <div className="note hint">
+      <div className="auth-form">
+        <div className="auth-head">
+          <h1>{mode === "signin" ? "Sign in" : "Sign up"}</h1>
+          <p className="muted">
             {mode === "signin" ? (
               <>
-                Use <strong>sofia@devias.io</strong> with password{" "}
-                <strong>Secret1</strong>
+                Don&apos;t have an account?{" "}
+                <button
+                  className="link-like"
+                  onClick={() => switchMode("signup")}
+                >
+                  Sign up
+                </button>
               </>
             ) : (
-              <>Created users are not persisted</>
+              <>
+                Already have an account?{" "}
+                <button
+                  className="link-like"
+                  onClick={() => switchMode("signin")}
+                >
+                  Sign in
+                </button>
+              </>
             )}
-          </div>
+          </p>
+        </div>
+
+        {mode === "signin" ? (
+          <SignInForm />
+        ) : (
+          <SignUpForm onSuccess={() => switchMode("signin")} />
+        )}
+
+        <div className="note hint">
+          {mode === "signin" ? (
+            <>
+              Use <strong>sofia@devias.io</strong> with password{" "}
+              <strong>Secret1</strong>
+            </>
+          ) : (
+            <>Created users are not persisted</>
+          )}
         </div>
       </div>
-      
+
+      {/* ✅ verify doanh nghiệp ở ngay dưới form */}
       <div className="auth-extra">
         <div className="divider">OR</div>
 
@@ -72,14 +80,14 @@ export default function Auth() {
 
           <button
             className="btn-secondary"
-              type="button"
-            onClick={() => window.location.href = "/verify"}
+            type="button"
+            onClick={() => (window.location.href = "/verify")}
           >
             🔍 Verify Credentials
           </button>
         </div>
       </div>
-
+    </div>
 
       <div className="auth-right">
         <div className="hero">
@@ -129,7 +137,32 @@ function SignInForm() {
   const [error, setError] = useState("");
   const [role, setRole] = useState("admin"); 
 
-  const onSubmit = (e) => {
+  // const onSubmit = (e) => {
+  //   e.preventDefault();
+  //   setError("");
+
+  //   if (!email || !password) {
+  //     setError("Vui lòng nhập email và mật khẩu.");
+  //     return;
+  //   }
+
+  //   const baseName = email.split("@")[0].replace(".", " ");
+  //   const user = {
+  //     email,
+  //     name: baseName,
+  //     role, 
+  //   };
+
+  //   login(user);
+
+  //   if (role === "student") {
+  //     navigate("/student", { replace: true });
+  //   } else {
+  //     // admin
+  //     navigate("/profile", { replace: true });
+  //   }
+  // };
+  const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -138,22 +171,33 @@ function SignInForm() {
       return;
     }
 
-    const baseName = email.split("@")[0].replace(".", " ");
-    const user = {
-      email,
-      name: baseName,
-      role, 
-    };
+    try {
+      // 🔑 GỌI BACKEND LOGIN
+      const res = await api.post("/api/auth/login", {
+        email,
+        password,
+      });
 
-    login(user);
+      const { token, user } = res.data;
 
-    if (role === "student") {
-      navigate("/student", { replace: true });
-    } else {
-      // admin
-      navigate("/profile", { replace: true });
+      // lưu token để axios interceptor tự gắn Authorization
+      localStorage.setItem("token", token);
+
+      // lưu user vào context (giữ nguyên cách cũ)
+      login({ ...user, role });
+
+      // điều hướng như cũ
+      if (role === "student") {
+        navigate("/student", { replace: true });
+      } else {
+        navigate("/profile", { replace: true });
+      }
+    } catch (err) {
+      console.error("Login error:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Đăng nhập thất bại.");
     }
   };
+
 
   return (
     <form onSubmit={onSubmit}>

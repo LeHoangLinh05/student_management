@@ -1,166 +1,243 @@
-import React from "react";
-import { Users, Check, Award, FileText, Hash } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
+import api from "../lib/api.js";
 import "../styles/student.css";
+
+import Sidebar from "../components/Sidebar.jsx";
+import Topbar from "../components/Topbar.jsx";
+
+import StudentHeader from "./StudentHeader.jsx";
+import StudentSummary from "./StudentSummary.jsx";
+import StudentProfileSection from "./StudentProfileSection.jsx";
+import StudentSecuritySection from "./StudentSecuritySection.jsx";
+import StudentAuditLogSection from "./StudentAuditLogSection.jsx";
 
 export default function StudentDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Mock data – thay bằng API backend
-  const student = {
-    name: "Nguyễn Văn A",
-    code: "SV2024001",
-    email: "student@university.edu.vn",
-    wallet: "0x742d...8f3c",
-    dob: "20/01/2003",
-    major: "Kỹ sư CNTT",
-  };
+  const [student, setStudent] = useState(null);
+  const [auditLogs, setAuditLogs] = useState([]);
 
-  const records = [
-    { subject: "Lập trình Web", grade: "9.5", semester: "HK1 2024-2025", date: "10/11/2025" },
-    { subject: "Cơ sở dữ liệu", grade: "8.8", semester: "HK1 2024-2025", date: "08/11/2025" },
-    { subject: "Mạng máy tính", grade: "9.0", semester: "HK1 2024-2025", date: "05/11/2025" },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const certs = [
-    { type: "Bằng Kỹ sư CNTT", date: "15/06/2024", nft: "#NFT-001", status: "Đã cấp" },
-    { type: "Chứng chỉ AI", date: "20/08/2024", nft: "#NFT-003", status: "Đã cấp" },
-  ];
+  // đổi mật khẩu
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwError, setPwError] = useState("");
+  const [pwMessage, setPwMessage] = useState("");
 
-  const displayName = user?.name || student.name;
-  const displayEmail = user?.email || student.email;
+  // ví blockchain (demo)
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [walletMsg, setWalletMsg] = useState("");
+  const [walletError, setWalletError] = useState("");
+
+  const shortHash = (h) =>
+    typeof h === "string" && h.length > 14
+      ? h.slice(0, 8) + "..." + h.slice(-4)
+      : h;
+
+  // fetch data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        if (!user?.email) {
+          setError("Không tìm thấy thông tin tài khoản.");
+          setLoading(false);
+          return;
+        }
+
+        // 1. tìm student theo email
+        const sRes = await api.get("/api/students");
+        const allStudents = sRes.data || [];
+        const s = allStudents.find((st) => st.email === user.email);
+
+        if (!s) {
+          setError(
+            "Không tìm thấy hồ sơ sinh viên cho tài khoản này. Vui lòng liên hệ quản trị viên."
+          );
+          setLoading(false);
+          return;
+        }
+
+        setStudent(s);
+
+        // 2. lấy audit logs
+        const auditRes = await api.get(`/api/students/${s._id}/audit`);
+        setAuditLogs(auditRes.data?.logs || []);
+      } catch (err) {
+        console.error(err);
+        setError("Không tải được dữ liệu. Vui lòng thử lại sau.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user?.email]);
 
   const handleLogout = () => {
     logout();
     navigate("/auth?mode=signin", { replace: true });
   };
 
+  // đổi mật khẩu
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPwError("");
+    setPwMessage("");
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      setPwError("Vui lòng nhập đầy đủ các trường.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPwError("Mật khẩu mới và xác nhận không khớp.");
+      return;
+    }
+
+    try {
+      setPwLoading(true);
+      await api.post("/api/auth/change-password", {
+        oldPassword,
+        newPassword,
+      });
+
+      setPwMessage("Đổi mật khẩu thành công.");
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      console.error(err);
+      setPwError(
+        err.response?.data?.message ||
+          "Đổi mật khẩu thất bại. Vui lòng thử lại."
+      );
+    } finally {
+      setPwLoading(false);
+    }
+  };
+
+  // ví blockchain demo
+  const handleConnectWalletDemo = async () => {
+    if (!student?._id) return;
+    try {
+      setWalletLoading(true);
+      setWalletError("");
+      setWalletMsg("");
+
+      const res = await api.post(
+        `/api/students/${student._id}/connect-wallet`,
+        { mode: "generate" }
+      );
+      const wallet = res.data?.wallet;
+
+      setStudent((prev) => ({ ...prev, wallet }));
+      setWalletMsg(
+        `Đã gắn ví demo: ${shortHash(wallet)} (sau này sẽ thay bằng ví thật)`
+      );
+    } catch (err) {
+      console.error(err);
+      setWalletError(
+        err.response?.data?.message || "Không gắn được ví demo. Thử lại sau."
+      );
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
+  const displayName = user?.name || student?.fullName || "Sinh viên";
+  const displayEmail = user?.email || student?.email || "";
+
+  // LOADING
+  if (loading) {
+    return (
+      <div className="app">
+        <Sidebar />
+        <main className="main">
+          <Topbar />
+          <div className="container">
+            <p>Đang tải dữ liệu...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // ERROR
+  if (error) {
+    return (
+      <div className="app">
+        <Sidebar />
+        <main className="main">
+          <Topbar />
+          <div className="container">
+            <StudentHeader
+              title="EduChain Student Portal"
+              subtitle="Xem hồ sơ học tập của bạn trên nền tảng blockchain."
+              displayName={displayName}
+              displayEmail={displayEmail}
+              onLogout={handleLogout}
+            />
+            <div className="panel">
+              <p style={{ color: "red" }}>{error}</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // NORMAL
   return (
-    <div className="student-root">
-      <main className="student-main">
-        {/* Header */}
-        <header className="student-header">
-          <div>
-            <h1 className="student-title">EduChain Student Portal</h1>
-            <p className="student-subtitle">
-              Xem hồ sơ học tập của bạn trên nền tảng blockchain.
-            </p>
-          </div>
+    <div className="app">
+      <Sidebar />
+      <main className="main">
+        <Topbar />
+        <div className="container">
+          {/* <StudentHeader
+            title="EduChain Student Portal"
+            subtitle="Xem hồ sơ học tập và dữ liệu blockchain của bạn."
+            displayName={displayName}
+            displayEmail={displayEmail}
+            onLogout={handleLogout}
+          /> */}
 
-          <div className="student-user">
-            <div className="student-user-name">{displayName}</div>
-            <div className="student-user-email">{displayEmail}</div>
-            <button className="student-logout-btn" onClick={handleLogout}>
-              Đăng xuất
-            </button>
-          </div>
-        </header>
+          <StudentSummary student={student} />
 
-        {/* Thông tin tổng quan */}
-        <section className="student-summary-grid">
-          <div className="card">
-            <div className="student-summary-item">
-              <div className="icon-ghost icon-indigo">
-                <Users />
-              </div>
-              <div>
-                <div className="muted">Mã sinh viên</div>
-                <div className="stat">{student.code}</div>
-              </div>
-            </div>
-          </div>
+          <StudentProfileSection
+            student={student}
+            displayName={displayName}
+            displayEmail={displayEmail}
+            walletLoading={walletLoading}
+            walletError={walletError}
+            walletMsg={walletMsg}
+            onConnectWallet={handleConnectWalletDemo}
+          />
 
-          <div className="card">
-            <div className="student-summary-item">
-              <div className="icon-ghost student-icon-green">
-                <Check />
-              </div>
-              <div>
-                <div className="muted">Trạng thái</div>
-                <div className="stat">Đang học</div>
-              </div>
-            </div>
-          </div>
+          <StudentSecuritySection
+            oldPassword={oldPassword}
+            newPassword={newPassword}
+            confirmPassword={confirmPassword}
+            setOldPassword={setOldPassword}
+            setNewPassword={setNewPassword}
+            setConfirmPassword={setConfirmPassword}
+            loading={pwLoading}
+            error={pwError}
+            message={pwMessage}
+            onSubmit={handleChangePassword}
+          />
 
-          <div className="card">
-            <div className="student-summary-item">
-              <div className="icon-ghost student-icon-purple">
-                <Award />
-              </div>
-              <div>
-                <div className="muted">Chương trình</div>
-                <div className="stat">{student.major}</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Hồ sơ cá nhân */}
-        <section className="panel">
-          <h3 className="panel-title">Hồ sơ cá nhân</h3>
-          <div className="student-profile">
-            <div className="avatar-lg">NV</div>
-            <div>
-              <div className="student-profile-name">{student.name}</div>
-              <div className="student-profile-email">{student.email}</div>
-              <div className="student-profile-dob">Ngày sinh: {student.dob}</div>
-
-              <div className="student-wallet-row">
-                <Hash size={16} color="#9ca3af" />
-                <code className="chip mono">{student.wallet}</code>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Điểm */}
-        <section className="panel">
-          <h3 className="panel-title">Điểm của tôi</h3>
-          <div className="list">
-            {records.map((r, i) => (
-              <div className="item item-hover" key={i}>
-                <div className="item-left">
-                  <div className="icon-ghost icon-indigo">
-                    <FileText />
-                  </div>
-                  <div>
-                    <div className="item-title">{r.subject}</div>
-                    <div className="item-sub">
-                      {r.semester} • {r.date}
-                    </div>
-                  </div>
-                </div>
-                <div className="item-right">
-                  <div className="score">{r.grade}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Bằng cấp & chứng chỉ */}
-        <section className="panel">
-          <h3 className="panel-title">Bằng cấp & Chứng chỉ</h3>
-          <div className="student-certs-grid">
-            {certs.map((c, i) => (
-              <div className="card" key={i}>
-                <div className="student-cert-header">
-                  <div>
-                    <div className="student-cert-title">{c.type}</div>
-                    <div className="student-cert-date">Ngày cấp: {c.date}</div>
-                  </div>
-                  <span className="badge green">{c.status}</span>
-                </div>
-                <div className="student-cert-footer">
-                  <span>Mã NFT</span>
-                  <code className="mono student-cert-nft">{c.nft}</code>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+          <StudentAuditLogSection logs={auditLogs} />
+        </div>
       </main>
     </div>
   );

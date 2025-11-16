@@ -5,5 +5,6 @@ const certificateSchema = new mongoose.Schema({
   date:      { type: Date, required: true },
   nftCode:   { type: String },
   ipfsCid:   { type: String },
+  txHash: { type: String, index: true },   
 }, { timestamps: true });
 export default mongoose.model("Certificate", certificateSchema);

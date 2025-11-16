@@ -8,7 +8,7 @@ export default function Topbar() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
-
+  const isStudent = user?.role === "student";
   useEffect(() => {
     const onClick = (e) => {
       if (!menuRef.current) return;
@@ -51,32 +51,42 @@ export default function Topbar() {
           {/* ảnh thật nếu có: <img src={user?.avatarUrl} alt="avatar"/> */}
           <span className="avatar-fallback">{initials}</span>
         </button>
-
-        {open && (
-          <div className="dropdown">
-            <div className="dropdown-header">
-              <div className="name">{user?.name || "Sofia Rivers"}</div>
-              <div className="email">{user?.email || "sofia.rivers@devias.io"}</div>
-            </div>
-
-            <button className="dropdown-item" onClick={() => navigate("/settings")}>
-              <Settings size={16} />
-              <span>Settings</span>
-            </button>
-
-            <button className="dropdown-item" onClick={() => navigate("/profile")}>
-              <User2 size={16} />
-              <span>Profile</span>
-            </button>
-
-            <div className="dropdown-divider" />
-
-            <button className="dropdown-item danger" onClick={handleSignOut}>
-              <LogOut size={16} />
-              <span>Sign out</span>
-            </button>
+      {open && (
+        <div className="dropdown">
+          <div className="dropdown-header">
+            <strong>{user?.name || "User"}</strong>
+            < span className="muted">{user?.email}</span>
           </div>
-        )}
+
+          <button
+            className="dropdown-item"
+            onClick={() => navigate(isStudent ? "/student" : "/settings")}
+          >
+            <Settings size={16} />
+            <span>Settings</span>
+          </button>
+
+          <button
+            className="dropdown-item"
+            onClick={() => navigate(isStudent ? "/student" : "/profile")}
+          >
+            <User2 size={16} />
+            <span>Profile</span>
+          </button>
+
+          <div className="dropdown-divider" />
+
+          {/* 👇 thêm nút Logout ở đây */}
+          <button
+            className="dropdown-item"
+            onClick={handleSignOut}
+          >
+            <LogOut size={16} />
+            <span>Logout</span>
+          </button>
+        </div>
+      )}
+
       </div>
     </header>
   );

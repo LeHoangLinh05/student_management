@@ -3,13 +3,66 @@ import { Users, Check, Award, Upload } from "lucide-react";
 import api from "../lib/api.js";
 
 export default function Profile() {
-    const [students, setStudents] = React.useState([]);
+  const [students, setStudents] = React.useState([]);
+  const [fullName, setFullName] = React.useState("");
+  const [code, setCode] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [dob, setDob] = React.useState("");
 
-    React.useEffect(() => {
-        api.get("/api/students")
-        .then(res => setStudents(res.data))
-        .catch(console.error);
-    }, []);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [message, setMessage] = React.useState("");
+
+  // load danh sách sinh viên (để thống kê)
+  React.useEffect(() => {
+    api
+      .get("/api/students")
+      .then((res) => setStudents(res.data))
+      .catch((err) => console.error(err));
+  }, []);
+
+  const handleCreateStudent = async () => {
+    setError("");
+    setMessage("");
+
+    if (!fullName || !code || !email || !dob) {
+      setError("Vui lòng nhập đầy đủ Họ tên, Mã SV, Email, Ngày sinh.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await api.post("/api/students", {
+        fullName,
+        code,
+        email,
+        dob, // dạng yyyy-mm-dd
+        // wallet: có thể thêm sau nếu muốn
+      });
+
+      setMessage(
+        "Đã tạo hồ sơ sinh viên. Sinh viên đăng nhập bằng Email + Mã sinh viên làm mật khẩu."
+      );
+
+      // reset form
+      setFullName("");
+      setCode("");
+      setEmail("");
+      setDob("");
+
+      // load lại danh sách sinh viên để cập nhật thống kê
+      const res = await api.get("/api/students");
+      setStudents(res.data);
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response?.data?.message || "Tạo hồ sơ sinh viên thất bại."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div>
@@ -21,7 +74,7 @@ export default function Profile() {
             <Users />
           </div>
           <div>
-            <div className="value">1,234</div>
+            <div className="value">{students.length}</div>
             <div className="label">Tổng sinh viên</div>
           </div>
         </div>
@@ -53,12 +106,22 @@ export default function Profile() {
         <div className="grid-2">
           <div className="form-group">
             <label>Họ và tên *</label>
-            <input className="input" placeholder="Nguyễn Văn A" />
+            <input
+              className="input"
+              placeholder="Nguyễn Văn A"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
           </div>
 
           <div className="form-group">
-            <label>Mã sinh viên *</label>
-            <input className="input" placeholder="SV2024001" />
+            <label>Mã sinh viên * (đồng thời là mật khẩu)</label>
+            <input
+              className="input"
+              placeholder="SV2024001"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
           </div>
 
           <div className="form-group">
@@ -67,31 +130,56 @@ export default function Profile() {
               className="input"
               type="email"
               placeholder="student@university.edu.vn"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
           <div className="form-group">
             <label>Ngày sinh *</label>
-            <input className="date" type="date" />
+            <input
+              className="date"
+              type="date"
+              value={dob}
+              onChange={(e) => setDob(e.target.value)}
+            />
           </div>
 
           <div className="form-group" style={{ gridColumn: "1 / -1" }}>
             <div className="dropzone">
               <Upload />
-              <div className="hint">Tải lên hồ sơ sinh viên</div>
+              <div className="hint">Tải lên hồ sơ sinh viên (tuỳ chọn)</div>
               <div className="sub">PDF, DOC, DOCX (Max 5MB)</div>
             </div>
           </div>
         </div>
 
-        <button className="btn-primary" style={{ marginTop: 16 }}>
+        <button
+          className="btn-primary"
+          style={{ marginTop: 16 }}
+          onClick={handleCreateStudent}
+          disabled={loading}
+        >
           <Upload />
-          Tạo hồ sơ & Cấp địa chỉ Blockchain
+          {loading ? "Đang tạo..." : "Tạo hồ sơ & Cấp tài khoản"}
         </button>
 
-        <div className="note">
-          <strong>Lưu ý:</strong> Sau khi tạo hồ sơ, sinh viên sẽ được cấp một
-          địa chỉ ví blockchain duy nhất.
+        {error && (
+          <div className="note" style={{ marginTop: 8, color: "red" }}>
+            {error}
+          </div>
+        )}
+
+        {message && (
+          <div className="note" style={{ marginTop: 8 }}>
+            {message}
+          </div>
+        )}
+
+        <div className="note" style={{ marginTop: 8 }}>
+          <strong>Lưu ý:</strong> Sinh viên đăng nhập bằng <b>Email</b> và{" "}
+          <b>Mã sinh viên (mật khẩu mặc định)</b>. Sau này bạn có thể thêm chức
+          năng đổi mật khẩu trong dashboard sinh viên.
         </div>
       </section>
     </div>

@@ -170,3 +170,36 @@
     text-align: left;
   }
 }
+
+.student-cert-footer {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.hash-block {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.hash-block code {
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qr-block {
+  flex-shrink: 0;
+}
+
+.cert-qr-img {
+  width: 96px;
+  height: 96px;
+  border-radius: 8px;
+  background: #fff;
+}

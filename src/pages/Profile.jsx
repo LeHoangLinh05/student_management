@@ -4,21 +4,30 @@ import api from "../lib/api.js";
 
 export default function Profile() {
   const [students, setStudents] = React.useState([]);
+  const [certificates, setCertificates] = React.useState([]);
   const [fullName, setFullName] = React.useState("");
   const [code, setCode] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [dob, setDob] = React.useState("");
-
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [message, setMessage] = React.useState("");
 
+  const fetchData = async () => {
+    try {
+      const [studentsRes, certsRes] = await Promise.all([
+        api.get("/api/students"),
+        api.get("/api/certificates"),
+      ]);
+      setStudents(studentsRes.data || []);
+      setCertificates(certsRes.data || []);
+    } catch (err) {
+      console.error("Lỗi khi tải dữ liệu dashboard:", err);
+    }
+  };
 
   React.useEffect(() => {
-    api
-      .get("/api/students")
-      .then((res) => setStudents(res.data))
-      .catch((err) => console.error(err));
+    fetchData();
   }, []);
 
   const handleCreateStudent = async () => {
@@ -32,34 +41,27 @@ export default function Profile() {
 
     try {
       setLoading(true);
-
       await api.post("/api/students", {
         fullName,
         code,
         email,
-        dob, 
+        dob,
       });
-
-      setMessage(
-        "Đã tạo hồ sơ sinh viên. Sinh viên đăng nhập bằng Email + Mã sinh viên làm mật khẩu."
-      );
-
+      setMessage("Đã tạo hồ sơ sinh viên. Sinh viên đăng nhập bằng Email + Mã sinh viên làm mật khẩu.");
       setFullName("");
       setCode("");
       setEmail("");
       setDob("");
-
-      const res = await api.get("/api/students");
-      setStudents(res.data);
+      await fetchData();
     } catch (err) {
       console.error(err);
-      setError(
-        err.response?.data?.message || "Tạo hồ sơ sinh viên thất bại."
-      );
+      setError(err.response?.data?.message || "Tạo hồ sơ sinh viên thất bại.");
     } finally {
       setLoading(false);
     }
   };
+
+  const verifiedStudentsCount = students.filter(s => s.wallet).length;
 
   return (
     <div>
@@ -81,7 +83,7 @@ export default function Profile() {
             <Check />
           </div>
           <div>
-            <div className="value">856</div>
+            <div className="value">{verifiedStudentsCount}</div>
             <div className="label">Đã xác thực</div>
           </div>
         </div>
@@ -91,7 +93,7 @@ export default function Profile() {
             <Award />
           </div>
           <div>
-            <div className="value">423</div>
+            <div className="value">{certificates.length}</div>
             <div className="label">Bằng cấp đã cấp</div>
           </div>
         </div>
@@ -175,7 +177,7 @@ export default function Profile() {
 
         <div className="note" style={{ marginTop: 8 }}>
           <strong>Lưu ý:</strong> Sinh viên đăng nhập bằng <b>Email</b> và{" "}
-          <b>Mã sinh viên (mật khẩu mặc định)</b>. 
+          <b>Mã sinh viên (mật khẩu mặc định)</b>.
         </div>
       </section>
     </div>

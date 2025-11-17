@@ -72,6 +72,15 @@ r.post("/graduate", async (req, res) => {
   }
 });
 
+r.get("/", async (req, res) => {
+  try {
+    const items = await Certificate.find({}).sort({ createdAt: -1 });
+    res.json(items);
+  } catch (e) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // GET /api/certificates/:studentId
 r.get("/:studentId", async (req, res) => {
   const items = await Certificate.find({ studentId: req.params.studentId }).sort({ date: -1 });

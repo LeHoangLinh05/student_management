@@ -1,4 +1,3 @@
-// src/components/student/StudentAuditLogSection.jsx
 import React from "react";
 import { Activity } from "lucide-react";
 
@@ -20,14 +19,12 @@ export default function StudentAuditLogSection({ logs }) {
 
       <div className="list">
         {logs.map((log) => {
-          // Ai truy vấn
           const requester =
-            log.company ||              // doanh nghiệp
-            log.requestedByName ||      // tên user nếu có
-            log.requestedByEmail ||     // email user nếu có
+            log.company ||              
+            log.requestedByName ||     
+            log.requestedByEmail ||     
             "Đơn vị / người truy vấn không xác định";
 
-          // Truy vấn cái gì
           const credentialType =
             log.credentialType === "degree"
               ? "bằng cấp"

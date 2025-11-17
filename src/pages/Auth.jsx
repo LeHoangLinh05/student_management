@@ -21,7 +21,7 @@ export default function Auth() {
 return (
   <div className="auth">
     <div className="auth-left">
-      <div className="auth-brand">DeviasKit</div>
+      
 
       <div className="auth-form">
         <div className="auth-head">
@@ -57,19 +57,8 @@ return (
           <SignUpForm onSuccess={() => switchMode("signin")} />
         )}
 
-        <div className="note hint">
-          {mode === "signin" ? (
-            <>
-              Use <strong>sofia@devias.io</strong> with password{" "}
-              <strong>Secret1</strong>
-            </>
-          ) : (
-            <>Created users are not persisted</>
-          )}
-        </div>
       </div>
 
-      {/* ✅ verify doanh nghiệp ở ngay dưới form */}
       <div className="auth-extra">
         <div className="divider">OR</div>
 
@@ -137,31 +126,6 @@ function SignInForm() {
   const [error, setError] = useState("");
   const [role, setRole] = useState("admin"); 
 
-  // const onSubmit = (e) => {
-  //   e.preventDefault();
-  //   setError("");
-
-  //   if (!email || !password) {
-  //     setError("Vui lòng nhập email và mật khẩu.");
-  //     return;
-  //   }
-
-  //   const baseName = email.split("@")[0].replace(".", " ");
-  //   const user = {
-  //     email,
-  //     name: baseName,
-  //     role, 
-  //   };
-
-  //   login(user);
-
-  //   if (role === "student") {
-  //     navigate("/student", { replace: true });
-  //   } else {
-  //     // admin
-  //     navigate("/profile", { replace: true });
-  //   }
-  // };
   const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -172,7 +136,6 @@ function SignInForm() {
     }
 
     try {
-      // 🔑 GỌI BACKEND LOGIN
       const res = await api.post("/api/auth/login", {
         email,
         password,
@@ -180,13 +143,10 @@ function SignInForm() {
 
       const { token, user } = res.data;
 
-      // lưu token để axios interceptor tự gắn Authorization
       localStorage.setItem("token", token);
 
-      // lưu user vào context (giữ nguyên cách cũ)
       login({ ...user, role });
 
-      // điều hướng như cũ
       if (role === "student") {
         navigate("/student", { replace: true });
       } else {

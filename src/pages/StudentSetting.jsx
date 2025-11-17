@@ -6,20 +6,13 @@ import "../styles/student.css";
 
 import Sidebar from "../components/Sidebar.jsx";
 import Topbar from "../components/Topbar.jsx";
+import StudentSecuritySection from "./student_section/StudentSecuritySection.jsx"; 
 
-import StudentHeader from "./StudentHeader.jsx";
-import StudentSummary from "./StudentSummary.jsx";
-import StudentProfileSection from "./student_section/StudentProfileSection.jsx";
-import StudentSecuritySection from "./student_section/StudentSecuritySection.jsx";
-import StudentAuditLogSection from "./student_section/StudentAuditLogSection.jsx";
-
-export default function StudentDashboard() {
+export default function StudentSetting() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const [student, setStudent] = useState(null);
-  const [auditLogs, setAuditLogs] = useState([]);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -30,26 +23,15 @@ export default function StudentDashboard() {
   const [pwError, setPwError] = useState("");
   const [pwMessage, setPwMessage] = useState("");
 
-  const [walletLoading, setWalletLoading] = useState(false);
-  const [walletMsg, setWalletMsg] = useState("");
-  const [walletError, setWalletError] = useState("");
-
-  const shortHash = (h) =>
-    typeof h === "string" && h.length > 14
-      ? h.slice(0, 8) + "..." + h.slice(-4)
-      : h;
-
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchStudent = async () => {
       try {
-        setLoading(true);
-        setError("");
-
         if (!user?.email) {
-          setError("Không tìm thấy thông tin tài khoản.");
-          setLoading(false);
+          navigate("/auth?mode=signin", { replace: true });
           return;
         }
+        setLoading(true);
+        setError("");
 
         const sRes = await api.get("/api/students");
         const allStudents = sRes.data || [];
@@ -62,11 +44,7 @@ export default function StudentDashboard() {
           setLoading(false);
           return;
         }
-
         setStudent(s);
-
-        const auditRes = await api.get(`/api/students/${s._id}/audit`);
-        setAuditLogs(auditRes.data?.logs || []);
       } catch (err) {
         console.error(err);
         setError("Không tải được dữ liệu. Vui lòng thử lại sau.");
@@ -75,8 +53,8 @@ export default function StudentDashboard() {
       }
     };
 
-    fetchData();
-  }, [user?.email]);
+    fetchStudent();
+  }, [user, navigate]);
 
   const handleLogout = () => {
     logout();
@@ -98,6 +76,11 @@ export default function StudentDashboard() {
       return;
     }
 
+    if (newPassword.length < 6) {
+      setError("Mật khẩu mới phải có ít nhất 6 ký tự.");
+      return; 
+    }
+    
     try {
       setPwLoading(true);
       await api.post("/api/auth/change-password", {
@@ -112,39 +95,10 @@ export default function StudentDashboard() {
     } catch (err) {
       console.error(err);
       setPwError(
-        err.response?.data?.message ||
-          "Đổi mật khẩu thất bại. Vui lòng thử lại."
+        err.response?.data?.message || "Đổi mật khẩu thất bại. Vui lòng thử lại."
       );
     } finally {
       setPwLoading(false);
-    }
-  };
-
-  // ví blockchain demo
-  const handleConnectWalletDemo = async () => {
-    if (!student?._id) return;
-    try {
-      setWalletLoading(true);
-      setWalletError("");
-      setWalletMsg("");
-
-      const res = await api.post(
-        `/api/students/${student._id}/connect-wallet`,
-        { mode: "generate" }
-      );
-      const wallet = res.data?.wallet;
-
-      setStudent((prev) => ({ ...prev, wallet }));
-      setWalletMsg(
-        `Đã gắn ví demo: ${shortHash(wallet)} (sau này sẽ thay bằng ví thật)`
-      );
-    } catch (err) {
-      console.error(err);
-      setWalletError(
-        err.response?.data?.message || "Không gắn được ví demo. Thử lại sau."
-      );
-    } finally {
-      setWalletLoading(false);
     }
   };
 
@@ -165,7 +119,6 @@ export default function StudentDashboard() {
     );
   }
 
-  // ERROR
   if (error) {
     return (
       <div className="app">
@@ -173,13 +126,15 @@ export default function StudentDashboard() {
         <main className="main">
           <Topbar />
           <div className="container">
-            <StudentHeader
-              title="EduChain Student Portal"
-              subtitle="Xem hồ sơ học tập của bạn trên nền tảng blockchain."
-              displayName={displayName}
-              displayEmail={displayEmail}
-              onLogout={handleLogout}
-            />
+            <header className="student-header">
+              <div>
+                <h1 className="student-title">Bảo mật tài khoản</h1>
+                <p className="student-subtitle">
+                  Quản lý mật khẩu và các cài đặt bảo mật.
+                </p>
+              </div>
+            </header>
+
             <div className="panel">
               <p style={{ color: "red" }}>{error}</p>
             </div>
@@ -189,34 +144,38 @@ export default function StudentDashboard() {
     );
   }
 
-  // NORMAL
   return (
     <div className="app">
       <Sidebar />
       <main className="main">
         <Topbar />
         <div className="container">
-          {/* <StudentHeader
-            title="EduChain Student Portal"
-            subtitle="Xem hồ sơ học tập và dữ liệu blockchain của bạn."
-            displayName={displayName}
-            displayEmail={displayEmail}
-            onLogout={handleLogout}
-          /> */}
+          <header className="student-header">
+            <div>
+              <h1 className="student-title">Bảo mật tài khoản</h1>
+              <p className="student-subtitle">
+                Thay đổi mật khẩu và quản lý bảo mật cho tài khoản của bạn.
+              </p>
+            </div>
 
-          <StudentSummary student={student} />
+            <div className="student-user">
+              <div className="student-user-name">{displayName}</div>
+              <div className="student-user-email">{displayEmail}</div>
+            </div>
+          </header>
 
-          <StudentProfileSection
-            student={student}
-            displayName={displayName}
-            displayEmail={displayEmail}
-            walletLoading={walletLoading}
-            walletError={walletError}
-            walletMsg={walletMsg}
-            onConnectWallet={handleConnectWalletDemo}
+          <StudentSecuritySection
+            oldPassword={oldPassword}
+            newPassword={newPassword}
+            confirmPassword={confirmPassword}
+            setOldPassword={setOldPassword}
+            setNewPassword={setNewPassword}
+            setConfirmPassword={setConfirmPassword}
+            loading={pwLoading}
+            error={pwError}
+            message={pwMessage}
+            onSubmit={handleChangePassword}
           />
-
-          <StudentAuditLogSection logs={auditLogs} />
         </div>
       </main>
     </div>

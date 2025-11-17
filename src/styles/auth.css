@@ -29,3 +29,16 @@
 .btn-secondary:hover {
   background: #334155;
 }
+
+.auth-form {
+  max-width: 500px;     /* hoặc giá trị bạn muốn */
+  width: 100%;
+  margin: 0 auto;       /* ⭐ giúp căn giữa theo chiều ngang */
+}
+.auth-left {
+  padding-left: 0;
+  padding-right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* ⭐ căn giữa tất cả nội dung theo chiều ngang */
+}

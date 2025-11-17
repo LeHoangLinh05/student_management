@@ -58,7 +58,7 @@ export default function Topbar() {
             < span className="muted">{user?.email}</span>
           </div>
 
-          <button
+          {/* <button
             className="dropdown-item"
             onClick={() => navigate(isStudent ? "/student" : "/settings")}
           >
@@ -74,7 +74,7 @@ export default function Topbar() {
             <span>Profile</span>
           </button>
 
-          <div className="dropdown-divider" />
+          <div className="dropdown-divider" /> */}
 
           {/* 👇 thêm nút Logout ở đây */}
           <button

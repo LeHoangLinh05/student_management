@@ -1,4 +1,3 @@
-// src/components/student/StudentProfileSection.jsx
 import React from "react";
 import { Hash } from "lucide-react";
 

@@ -1,0 +1,140 @@
+/* src/styles/Certificates.css */
+
+.cert-search-group {
+  margin-bottom: 16px;
+}
+
+.cert-student-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.cert-student-info {
+  flex: 1;
+}
+
+.cert-student-name {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.cert-student-wallet {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.cert-actions-wrapper {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-graduate {
+  background-color: #22c55e;
+}
+
+.cert-ipfs-card {
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+.cert-ipfs-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.cert-ipfs-title {
+  font-weight: 600;
+}
+
+.cert-ipfs-desc {
+  color: #cbd5f5;
+  margin-bottom: 8px;
+}
+
+.btn-ipfs-disabled {
+  width: 100%;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cert-feedback-msg {
+  margin-top: 12px;
+}
+
+.cert-list-student-info {
+  margin-bottom: 8px;
+}
+
+.cert-item-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.cert-item-details {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.cert-item-date {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.cert-item-nft-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 6px 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.cert-item-nft-code {
+  color: #4f46e5;
+  font-weight: 700;
+}
+
+.cert-item-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-qr {
+  background: #eef2ff;
+  color: #30336b;
+}
+
+.cert-qr-details {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cert-hash-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  word-break: break-all;
+}
+
+.cert-qr-row {
+  display: flex;
+  justify-content: center;
+}
+
+.cert-qr-img {
+  display: block;
+  border-radius: 8px;
+  max-width: 140px;
+}

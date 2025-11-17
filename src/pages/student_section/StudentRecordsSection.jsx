@@ -1,4 +1,3 @@
-// src/components/student/StudentRecordsSection.jsx
 import React from "react";
 import { FileText, Hash, Link as LinkIcon } from "lucide-react";
 

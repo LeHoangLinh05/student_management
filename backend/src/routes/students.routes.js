@@ -1,4 +1,3 @@
-// backend/src/routes/students.routes.js
 import { Router } from "express";
 import Student from "../models/Student.js";
 import User from "../models/User.js";   
@@ -15,14 +14,14 @@ const studentCreateSchema = z.object({
   fullName: z.string().min(1),
   code: z.string().min(3),
   email: z.string().email(),
-  dob: z.string(),          // yyyy-mm-dd
+  dob: z.string(),         
   wallet: z.string().optional(),
 });
 
 const studentUpdateSchema = z.object({
   fullName: z.string().min(1).optional(),
   email: z.string().email().optional(),
-  dob: z.string().optional(),          // 'yyyy-mm-dd'
+  dob: z.string().optional(),          
   wallet: z.string().optional(),
   status: z.enum(["studying", "graduated"]).optional(),
 });
@@ -66,13 +65,13 @@ r.post("/", async (req, res) => {
   try {
     const data = studentCreateSchema.parse(req.body);
 
-    // 1️⃣ kiểm tra xem email đã có User chưa
+    // kiểm tra xem email đã có User chưa
     const existsUser = await User.findOne({ email: data.email });
     if (existsUser) {
       return res.status(400).json({ message: "Email này đã có tài khoản." });
     }
 
-    // 2️⃣ tạo User: email = email sinh viên, password = mã SV
+    // tạo User: email = email sinh viên, password = mã SV
     const hashed = await bcrypt.hash(data.code, 10);
     const user = await User.create({
       email: data.email,
@@ -142,19 +141,19 @@ r.get("/:id/audit", async (req, res) => {
   try {
     const studentId = req.params.id;
 
-    // Lấy tất cả record của sinh viên
+
     const records = await Record.find({ studentId }).select(
       "subject txHash type name createdAt"
     );
 
-    // Tạo map tra cứu hash -> thông tin record
+
     const recordMap = {};
     for (const r of records) {
       if (r.txHash && r.txHash.startsWith("0x")) {
         recordMap[r.txHash] = {
           subject: r.subject,
           name: r.name,
-          type: r.type, // ví dụ: "degree" hoặc "certificate"
+          type: r.type, 
         };
       }
     }
@@ -164,12 +163,10 @@ r.get("/:id/audit", async (req, res) => {
       return res.json({ logs: [] });
     }
 
-    // Lấy tất cả verify logs liên quan
     const logs = await VerifyLog.find({ input: { $in: hashes } }).sort({
       createdAt: -1,
     });
 
-    // Gộp log với thông tin bằng cấp/chứng chỉ
     const result = logs.map((l) => {
       const info = recordMap[l.input] || {};
 

@@ -16,7 +16,7 @@ export default function Records() {
   const [grade, setGrade] = useState("");
   const [semester, setSemester] = useState("HK1 2024-2025");
 
-  // 🔹 load danh sách sinh viên để search theo mã SV
+
   useEffect(() => {
     (async () => {
       try {
@@ -28,7 +28,7 @@ export default function Records() {
     })();
   }, []);
 
-  // 🔍 tìm sinh viên theo mã SV
+  // tìm sinh viên theo mã SV
   const handleSearchStudent = async () => {
     setError("");
     setRecords([]);
@@ -50,7 +50,7 @@ export default function Records() {
     await loadRecords(s._id);
   };
 
-  // 🔹 load lịch sử điểm của 1 sinh viên
+
   const loadRecords = async (studentId) => {
     try {
       setLoading(true);
@@ -65,7 +65,7 @@ export default function Records() {
     }
   };
 
-  // ➕ thêm điểm mới cho sinh viên đang chọn
+  //thêm điểm mới cho sinh viên đang chọn
   const onAddRecord = async (e) => {
     e.preventDefault();
     if (!selectedStudent) {
@@ -137,7 +137,6 @@ export default function Records() {
 
         {selectedStudent ? (
           <>
-            {/* Card info SV */}
             <div className="student-head">
               <div className="avatar-lg">
                 {selectedStudent.fullName

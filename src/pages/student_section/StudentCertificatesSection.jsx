@@ -17,7 +17,6 @@ export default function StudentCertificatesSection({ certs, onCopyLink }) {
 
             return (
               <div key={c._id} className="card">
-                {/* phần header, type, date ... giữ nguyên */}
 
                 {hash && (
                   <div className="student-cert-footer">

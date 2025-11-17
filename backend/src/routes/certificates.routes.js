@@ -17,7 +17,7 @@ const certCreateSchema = z.object({
 });
 const graduateSchema = z.object({
   studentId: z.string(),
-  date: z.string().optional(), // có thể chọn ngày, nếu không sẽ lấy ngày hiện tại
+  date: z.string().optional(), 
 });
 
 // POST /api/certificates

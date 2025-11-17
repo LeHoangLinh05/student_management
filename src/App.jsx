@@ -5,7 +5,6 @@ import Topbar from "./components/Topbar.jsx";
 import Profile from "./pages/Profile.jsx";
 import Records from "./pages/Records.jsx";
 import Certificates from "./pages/Certificates.jsx";
-// import Verify from "./pages/Verify.jsx";
 import Auth from "./pages/Auth.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +12,8 @@ import StudentDashboard from "./pages/StudentDashboard.jsx";
 import StudentRecords from "./pages/StudentRecords.jsx";
 import StudentCertificates from "./pages/StudentCertificates.jsx";
 import Verify from "./pages/Verify.jsx";
+import StudentSetting from "./pages/StudentSetting.jsx";
+import Setting from "./pages/Setting.jsx";
 
 function AppLayout() {
   const { user } = useAuth();
@@ -34,7 +35,9 @@ function AppLayout() {
             <Route path="profile" element={<Profile />} />
             <Route path="records" element={<Records />} />
             <Route path="certificates" element={<Certificates />} />
+            <Route path="setting" element={<Setting />} />
             <Route path="*" element={<Navigate to="profile" replace />} />
+          
           </Routes>
         </div>
       </main>
@@ -49,17 +52,12 @@ export default function App() {
       <Route path="/auth" element={<Auth />} />
 
       {/* Student */}
-      <Route
-        path="/student"
-        element={<Navigate to="/student/profile" replace />}
-      />
+      <Route path="/student" element={<Navigate to="/student/profile" replace />}/>
       <Route path="/student/profile" element={<StudentDashboard />} />
       <Route path="/student/records" element={<StudentRecords />} />
-      <Route
-        path="/student/certificates"
-        element={<StudentCertificates />}
-      />
-
+      <Route path="/student/certificates" element={<StudentCertificates />} />
+      <Route path="/student/setting" element={<StudentSetting />} />
+      
       {/* Verify doanh nghiệp */}
       <Route path="/verify" element={<Verify />} />
 

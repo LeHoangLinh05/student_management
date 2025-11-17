@@ -1,4 +1,3 @@
-// backend/src/models/Student.js
 import mongoose from "mongoose";
 
 const studentSchema = new mongoose.Schema({

@@ -11,7 +11,7 @@ r.post("/hash", async (req, res) => {
   const isHex = typeof hash === "string" && /^0x[a-fA-F0-9]{6,}$/.test(hash);
 
   let result = "invalid";
-  let targetType = null;     // "record" | "certificate"
+  let targetType = null;    
   let targetId = null;
 
   if (isHex) {

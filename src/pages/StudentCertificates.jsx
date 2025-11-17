@@ -35,7 +35,7 @@ export default function StudentCertificates() {
         setLoading(true);
         setError("");
 
-        // tìm student theo email
+
         const sRes = await api.get("/api/students");
         const allStudents = sRes.data || [];
         const s = allStudents.find((st) => st.email === user.email);

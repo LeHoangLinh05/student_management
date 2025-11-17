@@ -1,8 +1,11 @@
-import React, { useState } from "react";
-import { Hash, QrCode, Check, ArrowLeft } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react"; 
+import { Hash, QrCode, Check, ArrowLeft, CameraOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Html5Qrcode } from "html5-qrcode";
 import api from "../lib/api.js";
-import "../styles/verify.css"; 
+import "../styles/verify.css";
+
+const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
 
 export default function Verify() {
   const navigate = useNavigate();
@@ -11,35 +14,21 @@ export default function Verify() {
   const [company, setCompany] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [verifyResult, setVerifyResult] = useState(null); 
+  const [verifyResult, setVerifyResult] = useState(null);
 
+  const [isScanning, setIsScanning] = useState(false);
+  const [cameraError, setCameraError] = useState("");
+  
   const [items, setItems] = useState([
-    {
-      name: "Nguyễn Văn A",
-      cert: "Bằng Kỹ sư CNTT",
-      result: "valid",
-      time: "2 phút trước",
-      company: "FPT Software",
-    },
-    {
-      name: "Trần Thị B",
-      cert: "Bằng Cử nhân Kinh tế",
-      result: "valid",
-      time: "15 phút trước",
-      company: "Vietcombank",
-    },
-    {
-      name: "Unknown",
-      cert: "Invalid Hash",
-      result: "invalid",
-      time: "1 giờ trước",
-      company: "Company XYZ",
-    },
+    /* mock data */
   ]);
 
-  const onVerify = async () => {
-    if (!hash) {
-      setError("Vui lòng nhập mã hash");
+
+  const onVerify = useCallback(async (hashToVerify) => {
+    const finalHash = hashToVerify || hash;
+
+    if (!finalHash) {
+      setError("Vui lòng nhập mã hash hoặc quét QR.");
       return;
     }
     try {
@@ -48,29 +37,52 @@ export default function Verify() {
       setVerifyResult(null);
 
       const res = await api.post("/api/verify/hash", {
-        hash,
+        hash: finalHash,
         company: company || undefined,
       });
 
       const result = res.data?.result === "valid" ? "valid" : "invalid";
       setVerifyResult(result);
-
-      const now = new Date();
-      const newItem = {
-        name: result === "valid" ? "Unknown" : "Unknown",
-        cert: result === "valid" ? "Hash hợp lệ" : "Invalid Hash",
-        result,
-        time: now.toLocaleTimeString("vi-VN"),
-        company: company || "N/A",
-      };
-
-      setItems((prev) => [newItem, ...prev].slice(0, 10));
     } catch (err) {
       console.error("Verify error:", err.response?.data || err.message);
       setError(err.response?.data?.message || "Xác minh thất bại");
     } finally {
       setLoading(false);
     }
+  }, [hash, company]);
+
+  useEffect(() => {
+    if (!isScanning) return;
+    
+    const html5QrCode = new Html5Qrcode("qr-reader");
+    const onScanSuccess = (decodedText) => {
+      setIsScanning(false);     
+      setHash(decodedText);    
+      onVerify(decodedText);   
+    };
+
+    const onScanFailure = (error) => { /* Bỏ qua */ };
+
+    html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess, onScanFailure)
+      .catch(err => {
+        setCameraError("Không thể truy cập camera. Vui lòng cấp quyền.");
+        setIsScanning(false);
+      });
+
+    return () => {
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(err => console.error("Lỗi khi dừng máy quét QR.", err));
+      }
+    };
+  }, [isScanning, onVerify]); 
+
+  const handleStartScan = () => {
+    setCameraError("");
+    setIsScanning(true);
+  };
+  
+  const handleStopScan = () => {
+    setIsScanning(false);
   };
 
   return (
@@ -94,7 +106,6 @@ export default function Verify() {
           </div>
         </header>
 
-        {/* Title */}
         <div className="verify-intro">
           <h2 className="page-title">Xác thực Bằng cấp</h2>
           <p className="verify-intro-text">
@@ -109,23 +120,20 @@ export default function Verify() {
               <div className="verify-icon-circle verify-icon-circle--hash">
                 <Hash size={32} />
               </div>
-              <h3>Xác minh bằng Hash</h3>
+              <h3>Xác minh bằng Hash (thủ công)</h3>
               <p>
-                Nhập mã hash được in trên bằng hoặc bên trong mã QR để kiểm tra
-                tính xác thực.
+                Sử dụng khi không thể quét QR. Nhập mã hash để kiểm tra.
               </p>
             </div>
-
             <label className="verify-form-group">
               <span>Mã Hash</span>
               <input
                 className="input"
                 value={hash}
                 onChange={(e) => setHash(e.target.value)}
-                placeholder="0x742d35Cc6634C0532925a3b844Bc9e7595f8f3c"
+                placeholder="Hash sẽ tự điền sau khi quét QR"
               />
             </label>
-
             <label className="verify-form-group">
               <span>Tên công ty (tuỳ chọn)</span>
               <input
@@ -135,10 +143,8 @@ export default function Verify() {
                 placeholder="FPT Software"
               />
             </label>
-
-            {error && <div className="verify-note verify-note--error">{error}</div>}
-
-            {verifyResult && (
+             {error && <div className="verify-note verify-note--error">{error}</div>}
+             {verifyResult && (
               <div
                 className={
                   "verify-note " +
@@ -152,17 +158,15 @@ export default function Verify() {
                   : "Bằng cấp không hợp lệ ❌"}
               </div>
             )}
-
             <button
               className="btn-primary verify-submit"
-              onClick={onVerify}
+              onClick={() => onVerify()} 
               disabled={loading}
             >
               {loading ? "Đang xác minh..." : "Xác minh"}
             </button>
           </div>
 
-          {/* QR card */}
           <div className="verify-card">
             <div className="verify-card-header">
               <div className="verify-icon-circle verify-icon-circle--qr">
@@ -171,22 +175,36 @@ export default function Verify() {
               <h3>Quét QR Code</h3>
               <p>Quét mã QR trên bằng cấp để xác thực nhanh.</p>
             </div>
-
-            <div className="verify-dropzone">
-              <QrCode size={72} />
-              <div className="verify-dropzone-text">
-                Nhấn để bật camera và quét QR
+            
+            {cameraError && <div className="verify-note verify-note--error">{cameraError}</div>}
+            
+            {isScanning ? (
+              <div style={{marginTop: 12}}>
+                <div id="qr-reader" style={{ borderRadius: 12, overflow: 'hidden' }}/>
+                <button 
+                  className="btn-primary" 
+                  style={{width: '100%', marginTop: 10, background: '#64748b'}}
+                  onClick={handleStopScan}
+                >
+                  <CameraOff size={16} style={{marginRight: 6}}/>
+                  Hủy quét
+                </button>
               </div>
-            </div>
+            ) : (
+              <div className="verify-dropzone" onClick={handleStartScan}>
+                <QrCode size={72} />
+                <div className="verify-dropzone-text">
+                  Nhấn để quét QR và tự động xác minh
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* History */}
         <section className="verify-history">
-          <h3>Kết quả xác minh gần đây</h3>
-
-          <div className="verify-history-list">
-            {items.map((v, i) => (
+           <h3>Kết quả xác minh gần đây</h3>
+           <div className="verify-history-list">
+             {items.map((v, i) => (
               <div className="verify-history-item" key={i}>
                 <div className="verify-history-left">
                   <div
@@ -215,7 +233,7 @@ export default function Verify() {
                 <div className="verify-history-time">{v.time}</div>
               </div>
             ))}
-          </div>
+           </div>
         </section>
       </div>
     </div>

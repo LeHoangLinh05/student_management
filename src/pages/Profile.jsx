@@ -13,7 +13,7 @@ export default function Profile() {
   const [error, setError] = React.useState("");
   const [message, setMessage] = React.useState("");
 
-  // load danh sách sinh viên (để thống kê)
+
   React.useEffect(() => {
     api
       .get("/api/students")
@@ -37,21 +37,18 @@ export default function Profile() {
         fullName,
         code,
         email,
-        dob, // dạng yyyy-mm-dd
-        // wallet: có thể thêm sau nếu muốn
+        dob, 
       });
 
       setMessage(
         "Đã tạo hồ sơ sinh viên. Sinh viên đăng nhập bằng Email + Mã sinh viên làm mật khẩu."
       );
 
-      // reset form
       setFullName("");
       setCode("");
       setEmail("");
       setDob("");
 
-      // load lại danh sách sinh viên để cập nhật thống kê
       const res = await api.get("/api/students");
       setStudents(res.data);
     } catch (err) {
@@ -178,8 +175,7 @@ export default function Profile() {
 
         <div className="note" style={{ marginTop: 8 }}>
           <strong>Lưu ý:</strong> Sinh viên đăng nhập bằng <b>Email</b> và{" "}
-          <b>Mã sinh viên (mật khẩu mặc định)</b>. Sau này bạn có thể thêm chức
-          năng đổi mật khẩu trong dashboard sinh viên.
+          <b>Mã sinh viên (mật khẩu mặc định)</b>. 
         </div>
       </section>
     </div>

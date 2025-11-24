@@ -4,9 +4,11 @@ import Student from "../models/Student.js";
 import { authGuard } from "../lib/auth.js";
 import { z } from "zod";
 import { customAlphabet } from "nanoid";
+import { contract as eduChain } from "../lib/educhain.js";
+import { ethers } from "ethers";
 
-//test
-const nano = customAlphabet("abcdef0123456789", 64);
+
+
 const r = Router();
 r.use(authGuard);
 
@@ -24,15 +26,32 @@ const graduateSchema = z.object({
 r.post("/", async (req, res) => {
   try {
     const data = certCreateSchema.parse(req.body);
-    const txHash = "0x" + nano();
+
+    const student = await Student.findById(data.studentId);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const tx = await eduChain.issueCertificate(
+      student.wallet || ethers.ZeroAddress,
+      student.code,
+      data.type,
+      "" // hoặc ipfsCid nếu sau này upload IPFS
+    );
+    const receipt = await tx.wait();
+    const txHash = receipt.hash;
+
     const cert = await Certificate.create({
       studentId: data.studentId,
       type: data.type,
       date: new Date(data.date),
       txHash,
-      nftCode: "#NFT-" + String(Math.floor(Math.random() * 900) + 100).padStart(3, "0"),
+      nftCode:
+        "#NFT-" +
+        String(Math.floor(Math.random() * 900) + 100).padStart(3, "0"),
       ipfsCid: null,
     });
+
     res.json(cert);
   } catch (e) {
     res.status(400).json({ message: e.message });

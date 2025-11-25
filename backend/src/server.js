@@ -10,6 +10,7 @@ import studentsRoutes from "./routes/students.routes.js";
 import recordsRoutes from "./routes/records.routes.js";
 import certificatesRoutes from "./routes/certificates.routes.js";
 import verifyRoutes from "./routes/verify.routes.js";
+import ipfsRoutes from "./routes/ipfs.routes.js";
 
 await connectDB();
 
@@ -26,6 +27,7 @@ app.use("/api/students", studentsRoutes);
 app.use("/api/records", recordsRoutes);
 app.use("/api/certificates", certificatesRoutes);
 app.use("/api/verify", verifyRoutes);
+app.use("/api/ipfs", ipfsRoutes);
 
 app.use((req, res) => res.status(404).json({ message: "Not found" }));
 

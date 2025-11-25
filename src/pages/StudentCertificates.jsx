@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Award, Link as LinkIcon } from "lucide-react";
+import { Award, Link as LinkIcon, QrCode } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
 import api from "../lib/api.js";
@@ -18,6 +18,11 @@ export default function StudentCertificates() {
   const [error, setError] = useState("");
   const [infoMsg, setInfoMsg] = useState("");
 
+  // Modal NFT
+  const [selectedCert, setSelectedCert] = useState(null);
+  // Hiện QR cho chứng chỉ nào
+  const [visibleQrCertId, setVisibleQrCertId] = useState(null);
+
   const shortHash = (h) =>
     typeof h === "string" && h.length > 14
       ? h.slice(0, 8) + "..." + h.slice(-4)
@@ -34,7 +39,6 @@ export default function StudentCertificates() {
 
         setLoading(true);
         setError("");
-
 
         const sRes = await api.get("/api/students");
         const allStudents = sRes.data || [];
@@ -68,21 +72,26 @@ export default function StudentCertificates() {
     fetchData();
   }, [user, user?.email, navigate]);
 
-  const copyVerifyLink = (hashOrCid) => {
-    if (!hashOrCid) return;
-    const url = `${window.location.origin}/verify?hash=${encodeURIComponent(
-      hashOrCid
-    )}`;
+  const copyHash = (hash) => {
+    if (!hash) return;
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(url);
-      setInfoMsg("Đã copy link verify vào clipboard.");
+      navigator.clipboard.writeText(hash);
+      setInfoMsg("Đã copy transaction hash vào clipboard.");
     } else {
-      window.prompt("Copy link verify:", url);
+      window.prompt("Copy transaction hash:", hash);
     }
   };
 
   const displayName = user?.name || student?.fullName || "Sinh viên";
   const displayEmail = user?.email || student?.email || "";
+
+  const getNftImageUrl = (cert) =>
+    cert?.ipfsCid ? `https://gateway.pinata.cloud/ipfs/${cert.ipfsCid}` : null;
+
+  const toggleQr = (id) =>
+    setVisibleQrCertId((prev) => (prev === id ? null : id));
+
+  const closeModal = () => setSelectedCert(null);
 
   // LOADING
   if (loading) {
@@ -124,7 +133,6 @@ export default function StudentCertificates() {
     );
   }
 
-  // NORMAL
   return (
     <div className="app">
       <Sidebar />
@@ -177,7 +185,7 @@ export default function StudentCertificates() {
                       </code>
                     </div>
 
-                    {c.ipfsCid && (
+                    {c.txHash && (
                       <div
                         style={{
                           marginTop: 10,
@@ -187,12 +195,12 @@ export default function StudentCertificates() {
                         }}
                       >
                         <code className="chip mono">
-                          {shortHash(c.ipfsCid)}
+                          {shortHash(c.txHash)}
                         </code>
                         <button
                           type="button"
                           className="link-btn"
-                          onClick={() => copyVerifyLink(c.ipfsCid)}
+                          onClick={() => copyHash(c.txHash)}
                           style={{
                             display: "inline-flex",
                             alignItems: "center",
@@ -201,8 +209,53 @@ export default function StudentCertificates() {
                           }}
                         >
                           <LinkIcon size={14} />
-                          <span>Copy link verify</span>
+                          <span>Copy txHash</span>
                         </button>
+                      </div>
+                    )}
+
+                    {/* Hàng nút QR + chi tiết NFT */}
+                    <div
+                      style={{
+                        marginTop: 12,
+                        display: "flex",
+                        gap: 8,
+                      }}
+                    >
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        style={{ flex: 1 }}
+                        onClick={() => toggleQr(c._id)}
+                        disabled={!c.txHash}
+                      >
+                        <QrCode size={16} style={{ marginRight: 6 }} />
+                        QR Code
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        style={{ flex: 1 }}
+                        onClick={() => setSelectedCert(c)}
+                        disabled={!getNftImageUrl(c)}
+                      >
+                        Xem chi tiết NFT
+                      </button>
+                    </div>
+
+                    {/* QR code cho chứng chỉ (encode txHash) */}
+                    {visibleQrCertId === c._id && c.txHash && (
+                      <div
+                        className="cert-qr-details"
+                        style={{ marginTop: 10, textAlign: "center" }}
+                      >
+                        <img
+                          className="cert-qr-img"
+                          alt="QR verify"
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
+                            c.txHash
+                          )}`}
+                        />
                       </div>
                     )}
                   </div>
@@ -217,6 +270,93 @@ export default function StudentCertificates() {
             </div>
           )}
         </div>
+
+        {/* Modal hiển thị NFT */}
+        {selectedCert && (
+          <div
+            className="modal-backdrop"
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(15,23,42,0.6)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 50,
+            }}
+            onClick={closeModal}
+          >
+            <div
+              className="modal-content"
+              style={{
+                background: "#fff",
+                borderRadius: 12,
+                maxWidth: 700,
+                width: "90%",
+                maxHeight: "90vh",
+                padding: 20,
+                overflow: "auto",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 style={{ marginBottom: 8 }}>
+                {selectedCert.type} – NFT Preview
+              </h3>
+              <p className="muted" style={{ marginBottom: 12 }}>
+                CID:{" "}
+                {selectedCert.ipfsCid ? (
+                  <code className="chip mono">{selectedCert.ipfsCid}</code>
+                ) : (
+                  "Chưa có IPFS CID"
+                )}
+              </p>
+
+              {getNftImageUrl(selectedCert) ? (
+                <>
+                  <div
+                    style={{
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 8,
+                      overflow: "hidden",
+                      marginBottom: 12,
+                    }}
+                  >
+                    <iframe
+                      src={getNftImageUrl(selectedCert)}
+                      title="NFT Preview"
+                      style={{
+                        width: "100%",
+                        height: "480px",
+                        border: "none",
+                      }}
+                    />
+                  </div>
+                  <a
+                    href={getNftImageUrl(selectedCert)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="link-btn"
+                    style={{ marginRight: 8 }}
+                  >
+                    Mở trên tab mới
+                  </a>
+                </>
+              ) : (
+                <p>Không tìm thấy file NFT cho chứng chỉ này.</p>
+              )}
+
+              <div style={{ marginTop: 16, textAlign: "right" }}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={closeModal}
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

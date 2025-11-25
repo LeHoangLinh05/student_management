@@ -6,6 +6,8 @@ import VerifyLog from "../models/VerifyLog.js";
 import { authGuard } from "../lib/auth.js";
 import { z } from "zod";
 import bcrypt from "bcryptjs";             
+import ShareToken from "../models/ShareToken.js";
+import crypto from "crypto";
 
 const r = Router();
 r.use(authGuard);
@@ -136,6 +138,7 @@ r.post("/:id/connect-wallet", async (req, res) => {
     res.status(400).json({ message: e.message });
   }
 });
+
 
 r.get("/:id/audit", async (req, res) => {
   try {

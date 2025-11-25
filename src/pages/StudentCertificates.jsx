@@ -17,6 +17,48 @@ export default function StudentCertificates() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [infoMsg, setInfoMsg] = useState("");
+  const [shareError, setShareError] = useState("");
+
+
+const shareVerifyLink = async (hashOrCid) => {
+  try {
+    setShareError("");
+    setInfoMsg("");
+
+    if (!hashOrCid) {
+      setShareError("Chứng chỉ này không có hash/CID để chia sẻ.");
+      return;
+    }
+
+    const res = await api.post("/api/verify/share", {
+      credentialHash: hashOrCid,
+      ttlHours: 48,
+    });
+
+    const token = res.data?.token;
+    if (!token) {
+      setShareError("Không tạo được link chia sẻ.");
+      return;
+    }
+
+    const url = `${window.location.origin}/verify?share=${encodeURIComponent(
+      token
+    )}`;
+
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+      setInfoMsg("Đã tạo và copy link chia sẻ riêng tư vào clipboard.");
+    } else {
+      window.prompt("Copy link chia sẻ:", url);
+    }
+  } catch (err) {
+    console.error("shareVerifyLink error:", err.response?.data || err.message);
+    setShareError(
+      err.response?.data?.message ||
+        "Không tạo được link chia sẻ. Thử lại sau."
+    );
+  }
+};
 
   // Modal NFT
   const [selectedCert, setSelectedCert] = useState(null);
@@ -200,7 +242,7 @@ export default function StudentCertificates() {
                         <button
                           type="button"
                           className="link-btn"
-                          onClick={() => copyHash(c.txHash)}
+                          onClick={() => shareVerifyLink(c.txHash || c.ipfsCid)}
                           style={{
                             display: "inline-flex",
                             alignItems: "center",
@@ -209,7 +251,7 @@ export default function StudentCertificates() {
                           }}
                         >
                           <LinkIcon size={14} />
-                          <span>Copy txHash</span>
+                          <span>Copy link verify</span>
                         </button>
                       </div>
                     )}

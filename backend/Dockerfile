@@ -7,8 +7,14 @@ RUN npm install
 
 COPY . .
 
-ENV PORT=4000
+FROM node:18
+
+WORKDIR /app
+
+COPY --from=builder /app /app
+
+ENV NODE_ENV=production
 
 EXPOSE 4000
 
-CMD ["npm", "start"]
+CMD ["node", "src/server.js"]

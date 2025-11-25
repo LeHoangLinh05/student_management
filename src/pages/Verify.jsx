@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Hash, QrCode, ArrowLeft, CameraOff } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { Hash, QrCode, Check, ArrowLeft, CameraOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
 import api from "../lib/api.js";
@@ -7,72 +7,125 @@ import "../styles/verify.css";
 
 const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
 
-const shorten = (s, left = 6, right = 4) =>
-  typeof s === "string" && s.length > left + right
-    ? s.slice(0, left) + "..." + s.slice(-right)
-    : s;
-
-const getOnchainNftUrl = (onchainResult) => {
-  const chain = onchainResult?.chain;
-  if (!onchainResult?.valid || !chain) return null;
-  if (chain.type !== "certificate") return null;
-  if (!chain.metadata) return null;
-  return `https://gateway.pinata.cloud/ipfs/${chain.metadata}`;
-};
-
 export default function Verify() {
   const navigate = useNavigate();
 
   const [hash, setHash] = useState("");
+  const [company, setCompany] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [verifyResult, setVerifyResult] = useState(null);
+  const [targetType, setTargetType] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [cameraError, setCameraError] = useState("");
-  const [onchainResult, setOnchainResult] = useState(null);
 
-  const handleVerifyOnchain = async (overrideHash) => {
-    const value = (overrideHash || hash || "").trim();
+  // certificate preview (NFT)
+  const [certPreview, setCertPreview] = useState(null);
 
-    if (!/^0x[0-9a-fA-F]{64}$/.test(value)) {
-      setError(
-        "Vui lòng nhập transaction hash hợp lệ (bắt đầu bằng 0x, dài 66 ký tự)."
-      );
-      return;
-    }
+  // ==== helper lấy URL NFT từ CID ====
+  const getCertImageUrl = (cert) =>
+    cert?.ipfsCid ? `https://gateway.pinata.cloud/ipfs/${cert.ipfsCid}` : null;
 
-    try {
-      setError("");
-      setOnchainResult(null);
-      setLoading(true);
+  // =============================
+  // 1) HÀM VERIFY HASH
+  // =============================
+  const onVerify = useCallback(
+    async (hashToVerify) => {
+      const finalHash = hashToVerify || hash;
 
-      const res = await api.get(`/api/verify/onchain/${value}`);
-      setOnchainResult(res.data);
-    } catch (err) {
-      console.error("On-chain verify error:", err.response?.data || err.message);
-      setError(
-        err.response?.data?.message || "Xác minh trên blockchain thất bại."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (!finalHash) {
+        setError("Vui lòng nhập mã hash hoặc quét QR.");
+        return;
+      }
 
+      try {
+        setLoading(true);
+        setError("");
+        setVerifyResult(null);
+        setTargetType(null);
+        setCertPreview(null);
+
+        const res = await api.post("/api/verify/hash", {
+          hash: finalHash,
+          company: company || undefined,
+        });
+
+        const data = res.data || {};
+        setVerifyResult(data.result);
+        setTargetType(data.targetType || null);
+
+        if (data.certificate) {
+          setCertPreview(data.certificate);
+        }
+      } catch (err) {
+        console.error("Verify error:", err.response?.data || err.message);
+        setError(err.response?.data?.message || "Xác minh thất bại");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [hash, company]
+  );
+
+  // =============================
+  // 2) Nhận link share ?share=token
+  // =============================
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sharedToken = params.get("share");
+    if (!sharedToken) return;
+
+    (async () => {
+      try {
+        setLoading(true);
+        setError("");
+        setVerifyResult(null);
+        setTargetType(null);
+        setCertPreview(null);
+
+        const res = await api.get(`/api/verify/shared/${sharedToken}`);
+        const credentialHash = res.data?.credentialHash;
+
+        if (!credentialHash) {
+          setError("Link chia sẻ không hợp lệ hoặc đã hết hạn.");
+          return;
+        }
+
+        setHash(credentialHash);
+        await onVerify(credentialHash);
+      } catch (err) {
+        console.error(err);
+        setError(
+          err.response?.data?.message ||
+            "Không sử dụng được link chia sẻ. Có thể link đã hết hạn."
+        );
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [onVerify]);
+
+  // =============================
+  // 3) Quét QR
+  // =============================
   useEffect(() => {
     if (!isScanning) return;
 
     const html5QrCode = new Html5Qrcode("qr-reader");
+
     const onScanSuccess = (decodedText) => {
-      // decodedText LÀ txHash vì QR encode đúng txHash
       setIsScanning(false);
       setHash(decodedText);
-      handleVerifyOnchain(decodedText);
+      onVerify(decodedText);
     };
-    const onScanFailure = () => {};
+
+    const onScanFailure = (_error) => {
+      // ignore
+    };
 
     html5QrCode
       .start({ facingMode: "environment" }, qrConfig, onScanSuccess, onScanFailure)
-      .catch((err) => {
-        console.error(err);
+      .catch(() => {
         setCameraError("Không thể truy cập camera. Vui lòng cấp quyền.");
         setIsScanning(false);
       });
@@ -82,7 +135,7 @@ export default function Verify() {
         html5QrCode.stop().catch(() => {});
       }
     };
-  }, [isScanning]);
+  }, [isScanning, onVerify]);
 
   const handleStartScan = () => {
     setCameraError("");
@@ -115,34 +168,44 @@ export default function Verify() {
         </header>
 
         <div className="verify-intro">
-          <h2 className="page-title">Xác thực Bằng cấp (On-chain)</h2>
+          <h2 className="page-title">Xác thực Bằng cấp</h2>
           <p className="verify-intro-text">
-            Dán transaction hash hoặc quét QR chứa txHash để kiểm tra chứng chỉ
-            trực tiếp trên blockchain EduChain (Sepolia).
+            Nhập hash / CID hoặc mở link chia sẻ từ sinh viên để kiểm tra tính
+            hợp lệ, đồng thời xem bản NFT của văn bằng lưu trên IPFS.
           </p>
         </div>
 
         <div className="verify-grid">
-          {/* Cột nhập hash + kết quả */}
+          {/* Cột nhập hash */}
           <div className="verify-card">
             <div className="verify-card-header">
               <div className="verify-icon-circle verify-icon-circle--hash">
                 <Hash size={32} />
               </div>
-              <h3>Xác minh bằng transaction hash</h3>
+              <h3>Xác minh bằng Hash / CID</h3>
               <p>
-                Dán txHash của giao dịch cấp bằng (hoặc quét QR) để kiểm tra
-                on-chainchain.
+                Dán mã hash (txHash) hoặc IPFS CID, hoặc mở từ link chia sẻ để
+                xác minh.
               </p>
             </div>
 
             <label className="verify-form-group">
-              <span>Transaction hash (txHash)</span>
+              <span>Mã Hash / IPFS CID</span>
               <input
                 className="input"
                 value={hash}
                 onChange={(e) => setHash(e.target.value)}
-                placeholder="0x..."
+                placeholder="0x... hoặc Qm..."
+              />
+            </label>
+
+            <label className="verify-form-group">
+              <span>Tên công ty (tuỳ chọn)</span>
+              <input
+                className="input"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                placeholder="FPT Software"
               />
             </label>
 
@@ -150,157 +213,80 @@ export default function Verify() {
               <div className="verify-note verify-note--error">{error}</div>
             )}
 
+            {verifyResult && (
+              <div
+                className={
+                  "verify-note " +
+                  (verifyResult === "valid"
+                    ? "verify-note--success"
+                    : "verify-note--error")
+                }
+                style={{ marginTop: 8 }}
+              >
+                {verifyResult === "valid"
+                  ? "Bằng cấp hợp lệ ✅"
+                  : "Bằng cấp không hợp lệ ❌"}
+              </div>
+            )}
+
             <button
               className="btn-primary verify-submit"
-              onClick={() => handleVerifyOnchain()}
+              onClick={() => onVerify()}
               disabled={loading}
             >
-              {loading ? "Đang xác minh..." : "Xác minh trên blockchain"}
+              {loading ? "Đang xác minh..." : "Xác minh"}
             </button>
 
-            {/* Kết quả on-chain */}
-            {onchainResult && (
-              <div className="verify-onchain-result" style={{ marginTop: 12 }}>
-                {onchainResult.valid ? (
+            {/* Nếu là certificate & có ipfsCid -> hiển thị NFT */}
+            {verifyResult === "valid" && targetType === "certificate" && (
+              <div className="verify-cert-preview">
+                <h4 style={{ marginTop: 16, marginBottom: 8 }}>
+                  Thông tin chứng chỉ (NFT)
+                </h4>
+                <p className="muted" style={{ marginBottom: 4 }}>
+                  Loại: {certPreview?.type || "Chứng chỉ"}
+                </p>
+                {certPreview?.ipfsCid && (
+                  <p className="muted" style={{ marginBottom: 8 }}>
+                    CID:{" "}
+                    <code className="chip mono">{certPreview.ipfsCid}</code>
+                  </p>
+                )}
+
+                {getCertImageUrl(certPreview) ? (
                   <>
-                    <div className="verify-note verify-note--success">
-                      Giao dịch hợp lệ trên blockchain ✅
-                    </div>
-
-                    {onchainResult.chain && (
-                      <div
+                    <div
+                      style={{
+                        border: "1px solid #e5e7eb",
+                        borderRadius: 8,
+                        overflow: "hidden",
+                        marginBottom: 8,
+                      }}
+                    >
+                      <iframe
+                        src={getCertImageUrl(certPreview)}
+                        title="Certificate NFT"
                         style={{
-                          marginTop: 10,
-                          padding: 12,
-                          borderRadius: 10,
-                          border: "1px solid #e5e7eb",
-                          background: "#f9fafb",
+                          width: "100%",
+                          height: "360px",
+                          border: "none",
                         }}
-                      >
-                        <div
-                          style={{
-                            marginBottom: 6,
-                            fontWeight: 600,
-                          }}
-                        >
-                          {onchainResult.chain.type === "certificate"
-                            ? "Chứng chỉ on-chain"
-                            : "Bản ghi điểm on-chain"}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 13,
-                            color: "#4b5563",
-                            marginBottom: 4,
-                          }}
-                        >
-                          Tx:{" "}
-                          <code className="mono">
-                            {shorten(onchainResult.chain.txHash)}
-                          </code>
-                        </div>
-                        {onchainResult.chain.studentCode && (
-                          <div
-                            style={{
-                              fontSize: 13,
-                              color: "#4b5563",
-                              marginBottom: 4,
-                            }}
-                          >
-                            Mã SV:{" "}
-                            <strong>{onchainResult.chain.studentCode}</strong>
-                          </div>
-                        )}
-                        {onchainResult.chain.certType && (
-                          <div
-                            style={{
-                              fontSize: 13,
-                              color: "#4b5563",
-                              marginBottom: 4,
-                            }}
-                          >
-                            Loại chứng chỉ:{" "}
-                            <strong>{onchainResult.chain.certType}</strong>
-                          </div>
-                        )}
-                        {onchainResult.chain.subject && (
-                          <div
-                            style={{
-                              fontSize: 13,
-                              color: "#4b5563",
-                              marginBottom: 4,
-                            }}
-                          >
-                            Môn học:{" "}
-                            <strong>{onchainResult.chain.subject}</strong>
-                          </div>
-                        )}
-                        <div
-                          style={{
-                            fontSize: 13,
-                            color: "#4b5563",
-                            marginBottom: 4,
-                          }}
-                        >
-                          Ví sinh viên:{" "}
-                          <code className="mono">
-                            {shorten(onchainResult.chain.studentWallet)}
-                          </code>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 13,
-                            color: "#4b5563",
-                          }}
-                        >
-                          Block:{" "}
-                          <strong>{onchainResult.chain.blockNumber}</strong>{" "}
-                          – Thời gian:{" "}
-                          {onchainResult.chain.issuedAt &&
-                            new Date(
-                              onchainResult.chain.issuedAt * 1000
-                            ).toLocaleString("vi-VN")}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Nếu là certificate + metadata (CID) -> hiện NFT */}
-                    {getOnchainNftUrl(onchainResult) && (
-                      <div style={{ marginTop: 12 }}>
-                        <div
-                          style={{
-                            border: "1px solid #e5e7eb",
-                            borderRadius: 10,
-                            overflow: "hidden",
-                          }}
-                        >
-                          <iframe
-                            src={getOnchainNftUrl(onchainResult)}
-                            title="On-chain NFT"
-                            style={{
-                              width: "100%",
-                              height: "360px",
-                              border: "none",
-                            }}
-                          />
-                        </div>
-                        <a
-                          href={getOnchainNftUrl(onchainResult)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="link-btn"
-                          style={{ marginTop: 6 }}
-                        >
-                          Mở văn bằng gốc trên IPFS
-                        </a>
-                      </div>
-                    )}
+                      />
+                    </div>
+                    <a
+                      href={getCertImageUrl(certPreview)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="link-btn"
+                    >
+                      Mở văn bằng gốc trên tab mới
+                    </a>
                   </>
                 ) : (
-                  <div className="verify-note verify-note--error">
-                    Không tìm thấy dữ liệu hợp lệ trên blockchain (
-                    {onchainResult.reason})
-                  </div>
+                  <p className="muted">
+                    Chứng chỉ này chưa gắn file IPFS, chỉ có metadata trong hệ
+                    thống.
+                  </p>
                 )}
               </div>
             )}
@@ -312,10 +298,8 @@ export default function Verify() {
               <div className="verify-icon-circle verify-icon-circle--qr">
                 <QrCode size={32} />
               </div>
-              <h3>Quét QR Code (txHash)</h3>
-              <p>
-                Quét để tự động xác minh on-chain.
-              </p>
+              <h3>Quét QR Code</h3>
+              <p>Quét QR trên văn bằng để tự động xác minh.</p>
             </div>
 
             {cameraError && (
@@ -347,7 +331,7 @@ export default function Verify() {
               <div className="verify-dropzone" onClick={handleStartScan}>
                 <QrCode size={72} />
                 <div className="verify-dropzone-text">
-                  Nhấn để bật camera và quét txHash từ QR
+                  Nhấn để bật camera và quét QR (hash hoặc CID)
                 </div>
               </div>
             )}

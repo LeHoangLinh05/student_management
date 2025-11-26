@@ -1,53 +1,55 @@
 version: "3.9"
 
 services:
-  mongo:
-    image: mongo:6
-    container_name: educhain-mongo
-    restart: always
-    environment:
-      MONGO_INITDB_DATABASE: educhain
-    volumes:
-      - mongo_data:/data/db
+  frontend:
+    build: 
+      context: .
+      dockerfile: Dockerfile          # Dockerfile ở root (frontend)
+    container_name: student_frontend
     ports:
-      - "27017:27017"
+      - "5173:5173"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://localhost:4000
+    restart: unless-stopped
 
   backend:
     build:
-      context: ./backend
+      context: ./backend              # đúng thư mục backend
       dockerfile: Dockerfile
-    container_name: educhain-backend
-    restart: always
-    env_file:
-      - ./backend/.env
-    environment:
-      # override lại MONGO_URI để trỏ tới service mongo trong compose
-      MONGO_URI: mongodb://mongo:27017/educhain
-      # CORS: origin trình duyệt sẽ là http://localhost:5173
-      CORS_ORIGIN: http://localhost:5173
+    container_name: student_backend
     ports:
       - "4000:4000"
     depends_on:
       - mongo
+    env_file:
+      - ./backend/.env                # dùng .env trong backend
+    restart: unless-stopped
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: educhain-frontend
-    restart: always
-    environment:
-      # để axios ở frontend gọi đúng backend trong docker network
-      VITE_API_URL: http://backend:4000
-    # TUỲ Dockerfile frontend của bạn expose port gì:
-    # nếu Dockerfile dùng Vite dev (EXPOSE 5173):
+  mongo:
+    image: mongo:6.0
+    container_name: mongo_db
     ports:
-      - "5173:5173"
-    # nếu Dockerfile build + serve bằng nginx (EXPOSE 80), thì dùng:
-    # ports:
-    #   - "5173:80"
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo_admin
     depends_on:
-      - backend
+      - mongo
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin
+    restart: unless-stopped
 
 volumes:
-  mongo_data:
+  mongo-data:

@@ -1,5 +1,6 @@
 // src/pages/student_section/StudentProfileSection.jsx
 import React, { useState } from "react";
+import api from "../../lib/api";
 
 export default function StudentProfileSection({
   student,
@@ -18,49 +19,42 @@ export default function StudentProfileSection({
       ? addr.slice(0, 6) + "..." + addr.slice(-4)
       : addr;
 
-  const handleConnectMetaMask = async () => {
-    setMmError("");
+const handleConnectMetaMask = async () => {
+  setMmError("");
 
-    if (!window.ethereum) {
-      setMmError("Không tìm thấy MetaMask. Vui lòng cài extension trước.");
+  if (!window.ethereum) {
+    setMmError("Không tìm thấy MetaMask. Vui lòng cài extension trước.");
+    return;
+  }
+
+  try {
+    setMmLoading(true);
+
+    const accounts = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+    const addr = accounts?.[0];
+    if (!addr) {
+      setMmError("Không nhận được địa chỉ ví từ MetaMask.");
       return;
     }
 
-    try {
-      setMmLoading(true);
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      const addr = accounts?.[0];
+    // Dùng axios với baseURL = VITE_API_URL (http://localhost:4000)
+    await api.post(`/api/students/${student._id}/connect-wallet`, {
+      mode: "custom",
+      address: addr,
+    });
 
-      if (!addr) {
-        setMmError("Không nhận được địa chỉ ví từ MetaMask.");
-        return;
-      }
-
-      // Gửi địa chỉ ví thật lên backend thông qua endpoint connect-wallet
-      const res = await fetch(
-        `/api/students/${student._id}/connect-wallet`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mode: "custom", address: addr }),
-        }
-      );
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || "Không thể gắn ví MetaMask.");
-      }
-
-      window.location.reload(); // reload nhẹ để cập nhật địa chỉ ví hiển thị
-    } catch (e) {
-      console.error(e);
-      setMmError(e.message || "Kết nối MetaMask thất bại.");
-    } finally {
-      setMmLoading(false);
-    }
-  };
+    window.location.reload();
+  } catch (e) {
+    console.error(e);
+    setMmError(
+      e.response?.data?.message || e.message || "Kết nối MetaMask thất bại."
+    );
+  } finally {
+    setMmLoading(false);
+  }
+};
 
   return (
     <section className="panel">

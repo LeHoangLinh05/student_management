@@ -65,6 +65,9 @@ r.post("/", async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
+    if (!student.wallet || !ethers.isAddress(student.wallet)) {
+      return res.status(400).json({ message: "Student has no valid wallet. Please assign a blockchain wallet before issuing certificate." });
+    }
     // 1) Ghi certificate vào EduChain (contract cũ)
     const tx = await eduChain.issueCertificate(
       student.wallet || ethers.ZeroAddress,

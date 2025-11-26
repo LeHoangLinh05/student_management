@@ -1,19 +1,11 @@
-FROM node:18-alpine
-
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm install
-
-COPY . .
-
 FROM node:18
 
 WORKDIR /app
 
-COPY --from=builder /app /app
+COPY package*.json ./
+RUN npm install
 
-ENV NODE_ENV=production
+COPY . .
 
 EXPOSE 4000
 

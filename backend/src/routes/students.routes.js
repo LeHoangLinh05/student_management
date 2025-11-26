@@ -8,6 +8,8 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";             
 import ShareToken from "../models/ShareToken.js";
 import crypto from "crypto";
+import Certificate from "../models/Certificate.js";
+
 
 const r = Router();
 r.use(authGuard);
@@ -144,54 +146,60 @@ r.get("/:id/audit", async (req, res) => {
   try {
     const studentId = req.params.id;
 
-
-    const records = await Record.find({ studentId }).select(
-      "subject txHash type name createdAt"
-    );
-
+    const records = await Record.find({ studentId }).select("subject txHash createdAt");
+    const certs   = await Certificate.find({ studentId }).select("type txHash createdAt");
 
     const recordMap = {};
-    for (const r of records) {
-      if (r.txHash && r.txHash.startsWith("0x")) {
+
+    // map điểm
+    records.forEach(r => {
+      if (r.txHash) {
         recordMap[r.txHash] = {
-          subject: r.subject,
-          name: r.name,
-          type: r.type, 
+          credentialType: "record",
+          credentialName: r.subject,
         };
       }
-    }
+    });
 
+    // map bằng cấp
+    certs.forEach(c => {
+      if (c.txHash) {
+        recordMap[c.txHash] = {
+          credentialType: "certificate",
+          credentialName: c.type,
+        };
+      }
+    });
+
+    // tất cả hash cần nhìn log
     const hashes = Object.keys(recordMap);
+
+    // FIX QUAN TRỌNG: nếu không có hash → trả về rỗng
     if (hashes.length === 0) {
       return res.json({ logs: [] });
     }
 
-    const logs = await VerifyLog.find({ input: { $in: hashes } }).sort({
-      createdAt: -1,
-    });
+    // lấy log verify
+    const logs = await VerifyLog.find({ input: { $in: hashes } }).sort({ createdAt: -1 });
 
-    const result = logs.map((l) => {
-      const info = recordMap[l.input] || {};
-
-      return {
-        id: l._id,
-        hash: l.input,
-        company: l.company || "Không rõ",
-        requestedBy: l.userName || l.userEmail || null,  // nếu có
-        credentialType: info.type || null,
-        credentialName: info.subject || info.name || null,
-
-        result: l.result,
-        createdAt: l.createdAt,
-      };
-    });
+    const result = logs.map(l => ({
+      id: l._id,
+      hash: l.input,
+      company: l.company || "Không rõ",
+      credentialType: recordMap[l.input]?.credentialType || null,
+      credentialName: recordMap[l.input]?.credentialName || null,
+      result: l.result,
+      createdAt: l.createdAt
+    }));
 
     res.json({ logs: result });
+
   } catch (e) {
     console.error(e);
     res.status(400).json({ message: e.message });
   }
 });
+
 
 
 // GET /api/students/:id

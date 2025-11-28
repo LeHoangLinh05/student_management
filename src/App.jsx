@@ -14,6 +14,8 @@ import StudentCertificates from "./pages/StudentCertificates.jsx";
 import Verify from "./pages/Verify.jsx";
 import StudentSetting from "./pages/StudentSetting.jsx";
 import Setting from "./pages/Setting.jsx";
+import ZeroKnowledgeProof from "./pages/ZeroKnowledgeProof.jsx";
+import MultiSignature from "./pages/MultiSignature.jsx";
 
 function AppLayout() {
   const { user } = useAuth();
@@ -36,6 +38,8 @@ function AppLayout() {
             <Route path="records" element={<Records />} />
             <Route path="certificates" element={<Certificates />} />
             <Route path="setting" element={<Setting />} />
+            <Route path="zkp" element={<ZeroKnowledgeProof />} />
+            <Route path="multisig" element={<MultiSignature />} />
             <Route path="*" element={<Navigate to="profile" replace />} />
           
           </Routes>
@@ -60,6 +64,10 @@ export default function App() {
       
       {/* Verify doanh nghiệp */}
       <Route path="/verify" element={<Verify />} />
+      
+      {/* ZKP & MultiSig */}
+      <Route path="/zkp" element={<ZeroKnowledgeProof />} />
+      <Route path="/multisig" element={<MultiSignature />} />
 
       {/* Admin */}
       <Route path="/*" element={<AppLayout />} />

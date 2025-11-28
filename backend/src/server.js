@@ -11,6 +11,8 @@ import recordsRoutes from "./routes/records.routes.js";
 import certificatesRoutes from "./routes/certificates.routes.js";
 import verifyRoutes from "./routes/verify.routes.js";
 import ipfsRoutes from "./routes/ipfs.routes.js";
+import zkpRoutes from "./routes/zkp.routes.js";
+import multisigRoutes from "./routes/multisig.routes.js";
 
 await connectDB();
 
@@ -28,6 +30,8 @@ app.use("/api/records", recordsRoutes);
 app.use("/api/certificates", certificatesRoutes);
 app.use("/api/verify", verifyRoutes);
 app.use("/api/ipfs", ipfsRoutes);
+app.use("/api/zkp", zkpRoutes);
+app.use("/api/multisig", multisigRoutes);
 
 app.use((req, res) => res.status(404).json({ message: "Not found" }));
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Shield, Users, FileText, Award, Cog } from "lucide-react";
+import { Shield, Users, FileText, Award, Cog, Lock, GitBranch } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx"; 
 
 const linkCls = ({ isActive }) => `nav-item ${isActive ? "active" : ""}`;
@@ -45,6 +45,19 @@ export default function Sidebar() {
         <NavLink to={settingPath} className={linkCls}>
           <Cog size={20} />
           <span>Cài đặt</span>
+        </NavLink>
+
+        {/* Security Features */}
+        <div className="nav-divider">Bảo mật nâng cao</div>
+
+        <NavLink to="/zkp" className={linkCls}>
+          <Lock size={20} />
+          <span>Zero Knowledge Proof</span>
+        </NavLink>
+
+        <NavLink to="/multisig" className={linkCls}>
+          <GitBranch size={20} />
+          <span>Multi-Signature</span>
         </NavLink>
       </nav>
     </aside>

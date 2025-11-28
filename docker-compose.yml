@@ -1,10 +1,8 @@
-version: "3.9"
-
 services:
   frontend:
     build: 
       context: .
-      dockerfile: Dockerfile          # Dockerfile ở root (frontend)
+      dockerfile: Dockerfile
     container_name: student_frontend
     ports:
       - "5173:5173"
@@ -13,10 +11,12 @@ services:
     environment:
       - VITE_API_URL=http://localhost:4000
     restart: unless-stopped
+    networks:
+      - educhain-network
 
   backend:
     build:
-      context: ./backend              # đúng thư mục backend
+      context: ./backend
       dockerfile: Dockerfile
     container_name: student_backend
     ports:
@@ -24,8 +24,13 @@ services:
     depends_on:
       - mongo
     env_file:
-      - ./backend/.env                # dùng .env trong backend
+      - ./backend/.env
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/student_management
+      - NODE_ENV=production
     restart: unless-stopped
+    networks:
+      - educhain-network
 
   mongo:
     image: mongo:6.0
@@ -35,6 +40,13 @@ services:
     volumes:
       - mongo-data:/data/db
     restart: unless-stopped
+    networks:
+      - educhain-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mongo-express:
     image: mongo-express
@@ -50,6 +62,12 @@ services:
       - ME_CONFIG_BASICAUTH_USERNAME=admin
       - ME_CONFIG_BASICAUTH_PASSWORD=admin
     restart: unless-stopped
+    networks:
+      - educhain-network
+
+networks:
+  educhain-network:
+    driver: bridge
 
 volumes:
   mongo-data:

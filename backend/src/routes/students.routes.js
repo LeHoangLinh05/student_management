@@ -5,7 +5,8 @@ import Record from "../models/Record.js";
 import VerifyLog from "../models/VerifyLog.js";
 import { authGuard } from "../lib/auth.js";
 import { z } from "zod";
-import bcrypt from "bcryptjs";             
+import bcrypt from "bcryptjs";    
+import multer from "multer";         
 import ShareToken from "../models/ShareToken.js";
 import crypto from "crypto";
 import Certificate from "../models/Certificate.js";
@@ -28,6 +29,11 @@ const studentUpdateSchema = z.object({
   dob: z.string().optional(),          
   wallet: z.string().optional(),
   status: z.enum(["studying", "graduated"]).optional(),
+});
+
+const upload = multer({
+  dest: "uploads/", 
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 });
 
 // PUT /api/students/:id  (admin chỉnh hồ sơ)
@@ -64,12 +70,24 @@ r.get("/", async (_req, res) => {
   res.json(items);
 });
 
-// POST /api/students
-r.post("/", async (req, res) => {
+// POST /api/students  (tạo sinh viên + upload hồ sơ)
+r.post("/", upload.single("file"), async (req, res) => {
   try {
+    // multer đã parse text field vào req.body
     const data = studentCreateSchema.parse(req.body);
 
-    // kiểm tra xem email đã có User chưa
+    // Thông tin file (nếu có upload)
+    // req.file = undefined nếu người ta không chọn file
+    const fileInfo = req.file
+      ? {
+          path: req.file.path,           // vd: "uploads/abc123.pdf"
+          originalName: req.file.originalname,
+          mimeType: req.file.mimetype,
+          size: req.file.size,
+        }
+      : null;
+
+    // kiểm tra email đã có User chưa
     const existsUser = await User.findOne({ email: data.email });
     if (existsUser) {
       return res.status(400).json({ message: "Email này đã có tài khoản." });
@@ -83,12 +101,15 @@ r.post("/", async (req, res) => {
       password: hashed,
     });
 
+    // tạo Student
     const student = await Student.create({
       fullName: data.fullName,
       code: data.code,
       email: data.email,
       dob: new Date(data.dob),
       wallet: data.wallet ?? undefined,
+      // nếu muốn lưu meta file vào DB:
+      file: fileInfo ?? undefined,
     });
 
     res.json({
@@ -103,6 +124,8 @@ r.post("/", async (req, res) => {
     res.status(400).json({ message: e.message });
   }
 });
+
+
 
 r.post("/:id/connect-wallet", async (req, res) => {
   try {

@@ -289,3 +289,17 @@
     box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
   }
 }
+
+/* Label trong 3 card tóm tắt */
+.student-summary-item .muted {
+  font-size: 14px;
+  color: #6b7280;     /* xám vừa phải */
+  opacity: 1;         /* ép hết mờ */
+}
+
+/* Giá trị chính: mã SV, trạng thái, chương trình */
+.student-summary-item .stat {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;     /* chữ đậm, dễ đọc */
+}

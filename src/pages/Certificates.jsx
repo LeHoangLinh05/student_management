@@ -253,9 +253,7 @@ export default function Certificates() {
         <div className="panel-header">
           <h3 className="panel-title">Cấp bằng & chứng chỉ</h3>
           <p className="muted">
-            Tìm sinh viên bằng mã SV, sau đó cấp bằng / chứng chỉ hoặc xác nhận
-            tốt nghiệp. Nếu chọn file, bằng sẽ được mint như NFT demo trên
-            IPFS.
+            
           </p>
         </div>
 
@@ -341,8 +339,7 @@ export default function Certificates() {
                 />
               </div>
               <p className="muted" style={{ marginTop: 4, fontSize: 12 }}>
-                File này sẽ được upload lên IPFS qua Pinata. Metadata JSON chuẩn
-                OpenSea sẽ trỏ tới file này.
+                File này sẽ được upload lên IPFS qua Pinata. 
               </p>
             </div>
 
@@ -370,26 +367,7 @@ export default function Certificates() {
             </div>
           </div>
 
-          {/* <div className="card cert-ipfs-card">
-            <div className="cert-ipfs-header">
-              <Shield size={20} />
-              <span className="cert-ipfs-title">
-                NFT metadata chuẩn OpenSea
-              </span>
-            </div>
-            <p className="muted cert-ipfs-desc">
-              Khi chọn file, hệ thống sẽ tự:
-              <br />• Upload file văn bằng lên IPFS (Pinata)
-              <br />• Tạo JSON metadata chuẩn OpenSea (name, description,
-              image, attributes)
-              <br />• Lưu CID file vào smart contract & MongoDB, lưu CID metadata
-              vào MongoDB.
-            </p>
-            <div className="note" style={{ marginTop: 8, fontSize: 12 }}>
-              Sau này khi triển khai ERC-721 thật, bạn có thể dùng{" "}
-              <code>metadataCid</code> làm <code>tokenURI</code>.
-            </div>
-          </div> */}
+
         </div>
 
         {error && <p className="error cert-feedback-msg">{error}</p>}
@@ -468,7 +446,7 @@ export default function Certificates() {
                       style={{ textDecoration: "none" }}
                     >
                       <Upload size={16} style={{ marginRight: 4 }} />
-                      Xem NFT
+                      Xem bằng cấp
                     </a>
                   </div>
 

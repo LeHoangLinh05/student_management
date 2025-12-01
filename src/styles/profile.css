@@ -1,0 +1,100 @@
+/* ===== Dashboard admin: 3 thẻ "Hồ sơ Sinh viên" ===== */
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.card.stat {
+  display: flex;
+  align-items: center;         /* căn giữa icon & text theo chiều dọc */
+  gap: 12px;
+  padding: 20px 22px;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+}
+
+/* ô icon màu */
+.card.stat .icon-ghost {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* đã có icon-indigo / icon-green / icon-purple rồi – giữ nguyên màu nếu bạn đang dùng */
+
+/* Số (5 / 2 / 6) – cho đậm, hết mờ */
+.card.stat .value {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #0f172a;
+  margin-bottom: 4px;
+  opacity: 1;                  /* ép hết mờ nếu có rule cũ */
+}
+
+/* Label bên dưới (Tổng sinh viên, Đã xác thực, …) */
+.card.stat .label {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* ===== Hồ sơ Sinh viên – 3 card thống kê ===== */
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* Đè hoàn toàn style card cũ cho case .card.stat */
+.card.stat {
+  background: #ffffff;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  border-radius: 20px;
+  padding: 24px 20px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;   /* căn giữa theo chiều dọc */
+  text-align: center;
+  color: #0f172a;            /* đè màu #eaf6ff của .card cũ */
+}
+
+/* icon ở trên */
+.card.stat .icon-ghost {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+/* số – 5 / 2 / 6 */
+.card.stat .value {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #0f172a;
+  margin-bottom: 4px;
+  opacity: 1;
+}
+
+/* label – Tổng sinh viên, Đã xác thực,... */
+.card.stat .label {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}

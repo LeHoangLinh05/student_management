@@ -162,7 +162,7 @@ const shareVerifyLink = async (hashOrCid) => {
               <div>
                 <h1 className="student-title">Bằng cấp & Chứng chỉ</h1>
                 <p className="student-subtitle">
-                  Xem các bằng cấp và chứng chỉ được cấp cho bạn.
+                  Xem các bằng cấp và chứng chỉ được cấp.
                 </p>
               </div>
             </header>
@@ -185,7 +185,7 @@ const shareVerifyLink = async (hashOrCid) => {
             <div>
               <h1 className="student-title">Bằng cấp & Chứng chỉ</h1>
               <p className="student-subtitle">
-                Các bằng cấp/chứng chỉ đã được ghi nhận như NFT (demo).
+                Các bằng cấp/chứng chỉ đã được ghi nhận như NFT.
               </p>
             </div>
 
@@ -196,7 +196,7 @@ const shareVerifyLink = async (hashOrCid) => {
           </header>
 
           <section className="panel">
-            <h3 className="panel-title">Bằng cấp & Chứng chỉ (NFT demo)</h3>
+            <h3 className="panel-title">Bằng cấp & Chứng chỉ</h3>
 
             {certs.length === 0 ? (
               <p>Chưa có chứng chỉ nào được cấp.</p>
@@ -281,7 +281,7 @@ const shareVerifyLink = async (hashOrCid) => {
                         onClick={() => setSelectedCert(c)}
                         disabled={!getNftImageUrl(c)}
                       >
-                        Xem chi tiết NFT
+                        Xem bằng cấp
                       </button>
                     </div>
 

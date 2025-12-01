@@ -111,7 +111,7 @@ export default function StudentRecords() {
               <div>
                 <h1 className="student-title">Học bạ & Điểm số</h1>
                 <p className="student-subtitle">
-                  Xem chi tiết các môn học và điểm số của bạn.
+                  Xem chi tiết các môn học và điểm số.
                 </p>
               </div>
             </header>
@@ -135,7 +135,7 @@ export default function StudentRecords() {
             <div>
               <h1 className="student-title">Học bạ & Điểm số</h1>
               <p className="student-subtitle">
-                Xem chi tiết các môn học và điểm số của bạn.
+                Xem chi tiết các môn học và điểm số.
               </p>
             </div>
 
@@ -146,7 +146,7 @@ export default function StudentRecords() {
           </header>
 
           <section className="panel">
-            <h3 className="panel-title">Điểm của tôi (Blockchain demo)</h3>
+            <h3 className="panel-title">Điểm của tôi</h3>
             {records.length === 0 ? (
               <p>Chưa có điểm nào được ghi nhận.</p>
             ) : (

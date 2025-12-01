@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import '../styles/zkp.css';
+import "../styles/student.css";      
+import "../styles/zkp.css";
+
+import Sidebar from "../components/Sidebar.jsx";
+import Topbar from "../components/Topbar.jsx";
 
 const ZeroKnowledgeProof = () => {
   const [zkpForm, setZkpForm] = useState({
@@ -80,6 +84,12 @@ const ZeroKnowledgeProof = () => {
   };
 
   return (
+    <div className="app">
+      <Sidebar />
+      <main className="main">
+        <Topbar />
+
+    <div className="container">
     <div className="zkp-container">
       <div className="zkp-header">
         <h1>🔐 Zero Knowledge Proof</h1>
@@ -178,6 +188,9 @@ const ZeroKnowledgeProof = () => {
           </div>
         )}
       </div>
+      </div>
+      </div>
+      </main>
     </div>
   );
 };

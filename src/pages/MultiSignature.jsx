@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/multisig.css';
-import { Lock, GitBranch, Plus, X, Send, Check, AlertCircle } from 'lucide-react';
+import "../styles/student.css";
+import "../styles/multisig.css";
+import { Lock, GitBranch, Plus, X, Send, Check, AlertCircle } from "lucide-react";
 
+import Sidebar from "../components/Sidebar.jsx";
+import Topbar from "../components/Topbar.jsx";
 const MultiSignature = () => {
   const [signers, setSigners] = useState([]);
   const [requiredSignatures, setRequiredSignatures] = useState(2);
@@ -194,6 +197,13 @@ const MultiSignature = () => {
   };
 
   return (
+    <div className="app">
+      <Sidebar />
+
+      <main className="main">
+        <Topbar />
+
+        <div className="container">
     <div className="multisig-container">
       <div className="multisig-header">
         <h1>🔗 Multi-Signature Management</h1>
@@ -472,6 +482,9 @@ const MultiSignature = () => {
           </div>
         </div>
       )}
+      </div>
+      </div>
+      </main>
     </div>
   );
 };

@@ -1,0 +1,125 @@
+/* ====== SIDEBAR CƠ BẢN ====== */
+.sidebar {
+  position: relative;            /* để đặt nút toggle absolute được */
+  width: 260px;
+  background: linear-gradient(180deg, #111827, #1d2671);
+  color: #f9fafb;
+  padding: 20px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  transition: width 0.25s ease;
+}
+
+/* ====== KHI THU GỌN ====== */
+.sidebar.collapsed {
+  width: 72px;
+}
+
+/* logo / brand */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.brand-icon {
+  flex-shrink: 0;
+}
+
+/* text logo – chỉ hiện khi chưa collapse, mình đã ẩn bằng React rồi nên CSS này chỉ để style */
+.brand-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.brand-subtitle {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* NAV */
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;              /* đẩy nút toggle xuống đáy */
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-size: 14px;
+  color: #f9fafb;
+  text-decoration: none;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-item.active {
+  background: #f8fafc;
+  color: #111827;
+}
+
+/* divider */
+.nav-divider {
+  margin: 12px 4px 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+}
+
+/* CHỈ ẨN CHỮ KHI THU GỌN – KHÔNG ẨN ICON */
+.link-text {
+  transition: opacity 0.2s ease, width 0.2s ease;
+}
+
+/* ẩn chữ + divider, NHƯNG KHÔNG ĐỤNG TỚI .nav-item, svg */
+.sidebar.collapsed .link-text,
+.sidebar.collapsed .nav-divider {
+  display: none;
+}
+
+/* khi thu gọn: icon được căn giữa */
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+}
+
+/* đảm bảo icon luôn hiện */
+.sidebar .nav-item svg {
+  display: block;
+}
+
+/* ====== NÚT TOGGLE CỐ ĐỊNH Ở ĐÁY ====== */
+.sidebar-toggle {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: none;
+  background: #f8fafc;
+  color: #111827;
+  border-radius: 999px;
+  width: 42px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.35);
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.sidebar-toggle:hover {
+  background: #e5e7eb;
+  transform: translate(-50%, -1px);
+  box-shadow: 0 6px 15px rgba(15, 23, 42, 0.4);
+}

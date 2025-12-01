@@ -1,8 +1,11 @@
 import React from "react";
 import { Users, Check, Award, Upload } from "lucide-react";
 import api from "../lib/api.js";
-
+import "../styles/profile.css";
 export default function Profile() {
+  const [file, setFile] = React.useState(null);
+  const fileInputRef = React.useRef(null);
+
   const [students, setStudents] = React.useState([]);
   const [certificates, setCertificates] = React.useState([]);
   const [fullName, setFullName] = React.useState("");
@@ -30,36 +33,84 @@ export default function Profile() {
     fetchData();
   }, []);
 
+  const handleFileChange = (e) => {
+  const selected = e.target.files?.[0];
+  if (!selected) return;
+
+  setError("");
+  setMessage("");
+
+  // validate loại file
+  const allowedTypes = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ];
+
+  if (!allowedTypes.includes(selected.type)) {
+    setError("Chỉ cho phép PDF, DOC, DOCX.");
+    setFile(null);
+    return;
+  }
+
+  // validate dung lượng (5MB)
+  const maxSize = 5 * 1024 * 1024;
+  if (selected.size > maxSize) {
+    setError("File vượt quá 5MB.");
+    setFile(null);
+    return;
+  }
+
+  setFile(selected);
+};
+
   const handleCreateStudent = async () => {
-    setError("");
-    setMessage("");
+  setError("");
+  setMessage("");
 
-    if (!fullName || !code || !email || !dob) {
-      setError("Vui lòng nhập đầy đủ Họ tên, Mã SV, Email, Ngày sinh.");
-      return;
+  if (!fullName || !code || !email || !dob) {
+    setError("Vui lòng nhập đầy đủ Họ tên, Mã SV, Email, Ngày sinh.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("fullName", fullName);
+    formData.append("code", code);
+    formData.append("email", email);
+    formData.append("dob", dob);
+    if (file) {
+      formData.append("file", file); // tên field tuỳ backend bạn quy ước
     }
 
-    try {
-      setLoading(true);
-      await api.post("/api/students", {
-        fullName,
-        code,
-        email,
-        dob,
-      });
-      setMessage("Đã tạo hồ sơ sinh viên. Sinh viên đăng nhập bằng Email + Mã sinh viên làm mật khẩu.");
-      setFullName("");
-      setCode("");
-      setEmail("");
-      setDob("");
-      await fetchData();
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Tạo hồ sơ sinh viên thất bại.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    await api.post("/api/students", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    setMessage(
+      "Đã tạo hồ sơ sinh viên. Sinh viên đăng nhập bằng Email + Mã sinh viên làm mật khẩu."
+    );
+    setFullName("");
+    setCode("");
+    setEmail("");
+    setDob("");
+    setFile(null); // reset file
+
+    await fetchData();
+  } catch (err) {
+    console.error(err);
+    setError(
+      err.response?.data?.message || "Tạo hồ sơ sinh viên thất bại."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const verifiedStudentsCount = students.filter(s => s.wallet).length;
 
@@ -145,12 +196,27 @@ export default function Profile() {
           </div>
 
           <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-            <div className="dropzone">
-              <Upload />
-              <div className="hint">Tải lên hồ sơ sinh viên (tuỳ chọn)</div>
-              <div className="sub">PDF, DOC, DOCX (Max 5MB)</div>
-            </div>
-          </div>
+  <div
+    className="dropzone"
+    onClick={() => fileInputRef.current?.click()}
+    style={{ cursor: "pointer" }}
+  >
+    <Upload />
+    <div className="hint">Tải lên hồ sơ sinh viên (tuỳ chọn)</div>
+    <div className="sub">
+      {file ? file.name : "PDF, DOC, DOCX (Max 5MB)"}
+    </div>
+
+    <input
+      ref={fileInputRef}
+      type="file"
+      accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      style={{ display: "none" }}
+      onChange={handleFileChange}
+    />
+  </div>
+</div>
+
         </div>
 
         <button

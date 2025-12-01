@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   frontend:
     build: 
@@ -13,18 +11,26 @@ services:
     environment:
       - VITE_API_URL=http://localhost:4000
     restart: unless-stopped
+    networks:
+      - educhain-network
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: student_backend
     ports:
       - "4000:4000"
     depends_on:
       - mongo
+    env_file:
+      - ./backend/.env
     environment:
-      - MONGO_URI=mongodb://mongo:27017/educhain
-      - PORT=4000
+      - MONGO_URI=mongodb://mongo:27017/student_management
+      - NODE_ENV=production
     restart: unless-stopped
+    networks:
+      - educhain-network
 
   mongo:
     image: mongo:6.0
@@ -33,14 +39,20 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
-    env_file:
-      - ./backend/.env
     restart: unless-stopped
+    networks:
+      - educhain-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mongo-express:
     image: mongo-express
     container_name: mongo_admin
-    restart: unless-stopped
+    depends_on:
+      - mongo
     ports:
       - "8081:8081"
     environment:
@@ -49,7 +61,13 @@ services:
       - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
       - ME_CONFIG_BASICAUTH_USERNAME=admin
       - ME_CONFIG_BASICAUTH_PASSWORD=admin
+    restart: unless-stopped
+    networks:
+      - educhain-network
 
+networks:
+  educhain-network:
+    driver: bridge
 
 volumes:
   mongo-data:

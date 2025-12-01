@@ -147,6 +147,56 @@ export default function StudentDashboard() {
       setWalletLoading(false);
     }
   };
+  // ví MetaMask thật
+  const handleConnectWalletMetamask = async () => {
+    if (!student?._id) return;
+
+    if (!window.ethereum) {
+      setWalletError("Trình duyệt chưa cài MetaMask hoặc wallet EVM tương thích.");
+      setWalletMsg("");
+      return;
+    }
+
+    try {
+      setWalletLoading(true);
+      setWalletError("");
+      setWalletMsg("");
+
+      // Yêu cầu MetaMask cho phép truy cập tài khoản
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+
+      if (!accounts || accounts.length === 0) {
+        setWalletError("Không lấy được địa chỉ ví từ MetaMask.");
+        return;
+      }
+
+      const address = accounts[0];
+
+      const res = await api.post(
+        `/api/students/${student._id}/connect-wallet`,
+        {
+          mode: "custom",
+          address,
+        }
+      );
+
+      const wallet = res.data?.wallet || address;
+
+      setStudent((prev) => ({ ...prev, wallet }));
+      setWalletMsg(`Đã gắn ví MetaMask: ${shortHash(wallet)}`);
+    } catch (err) {
+      console.error(err);
+      setWalletError(
+        err.response?.data?.message ||
+          "Không gắn được ví MetaMask. Vui lòng thử lại."
+      );
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
 
   const displayName = user?.name || student?.fullName || "Sinh viên";
   const displayEmail = user?.email || student?.email || "";
@@ -196,13 +246,7 @@ export default function StudentDashboard() {
       <main className="main">
         <Topbar />
         <div className="container">
-          {/* <StudentHeader
-            title="EduChain Student Portal"
-            subtitle="Xem hồ sơ học tập và dữ liệu blockchain của bạn."
-            displayName={displayName}
-            displayEmail={displayEmail}
-            onLogout={handleLogout}
-          /> */}
+
 
           <StudentSummary student={student} />
 
@@ -214,6 +258,7 @@ export default function StudentDashboard() {
             walletError={walletError}
             walletMsg={walletMsg}
             onConnectWallet={handleConnectWalletDemo}
+            onConnectWalletMetamask={handleConnectWalletMetamask}
           />
 
           <StudentAuditLogSection logs={auditLogs} />
